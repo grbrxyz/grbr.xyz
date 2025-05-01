@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>grbr.xyz</title>
+  <link rel="icon" type="image/x-icon" href="https://em-content.zobj.net/source/twitter/408/flag-palestinian-territories_1f1f5-1f1f8.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html {
+      font-size: 200%;
+      height: 100%;
+      width: 100%;
+      -webkit-text-size-adjust: 100%;
+    }
+    body {
+      height: 100%;
+      width: 100%;
+    }
+    *:not(input) {
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+    img, video {
+      -webkit-user-drag: none;
+      user-drag: none;
+    }
+    #site-container {
+      background: #121212;
+      color: #e0e0e0;
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+    }
+    header {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 3.5rem;
+      pointer-events: none;
+      z-index: 100;
+    }
+    #search-bar {
+      pointer-events: all;
+      position: absolute;
+      top: 1rem; left: 50%;
+      transform: translateX(-50%);
+      display: flex; gap: .5rem;
+      padding: .5rem 1rem;
+      border-radius: .75rem;
+      backdrop-filter: blur(8px);
+      background: rgba(0,0,0,0.4);
+      align-items: center;
+    }
+    #search-input {
+      flex: 1;
+      border: none;
+      border-radius: .25rem;
+      padding: .6rem;
+      background: rgba(255,255,255,0.15);
+      color: #222;
+      font-size: 1rem;
+      -webkit-user-select: text;
+      user-select: text;
+    }
+    #search-input::placeholder { color: #222; }
+    #settings-btn, #go-btn {
+      border: none; cursor: pointer;
+      transition: transform .2s ease;
+    }
+    #settings-btn { background: transparent; padding: 0; }
+    #settings-btn img { width: 1.25rem; height: 1.25rem; }
+    #settings-btn:active { transform: scale(.9); }
+    #go-btn {
+      background: #3d5afe;
+      border-radius: .25rem;
+      padding: 0 1rem;
+      color: #fff;
+      font-size: 1rem;
+    }
+    #go-btn:active { transform: scale(.95); }
+    #settings-backdrop { position: fixed; inset: 0; display: none; z-index: 240; }
+    #settings-menu {
+      position: fixed;
+      top:50%; left:50%;
+      transform: translate(-50%,-50%) scale(.95);
+      width:90%; max-width:20rem;
+      padding:1.5rem; border-radius:12px;
+      backdrop-filter: blur(12px);
+      background: rgba(0,0,0,0.4);
+      color: #e0e0e0;
+      opacity:0; pointer-events:none;
+      transition: opacity .2s ease, transform .2s ease;
+      z-index:250;
+    }
+    #settings-menu.open {
+      opacity:1; pointer-events:all; transform: translate(-50%,-50%) scale(1);
+    }
+    #settings-menu .header-container {
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      gap: 0.1rem;
+      margin-bottom: 1rem;
+    }
+    #settings-menu .header-container h2 {
+      font-size: 1.75rem;
+      color: #C8A2C8;
+      margin: 0;
+      line-height: 1;
+    }
+    #settings-menu .header-container .version-link {
+      font-size: 0.75rem;
+      color: #C8A2C8;
+      text-decoration: none;
+      margin: 0;
+      line-height: 1;
+      cursor: default;
+    }
+    #settings-menu label {
+      display:flex; align-items:center; gap:.5rem;
+      margin-bottom:.75rem;
+    }
+    #settings-menu input[type="checkbox"] {
+      width:1.2rem; height:1.2rem;
+    }
+    #loading-bar {
+      position: fixed; top:0; left:0;
+      height:3px; background:#536dfe;
+      width:0; transition:width .2s;
+      z-index:150;
+    }
+    main {
+      flex:1; position:relative;
+      overflow-y:auto; -webkit-overflow-scrolling:touch;
+      padding-top:5rem;
+    }
+    #initial {
+      position:absolute; inset:0;
+      display:flex; align-items:center; justify-content:center;
+      color:#555; font-size:1.25rem;
+    }
+    #gallery {
+      display:grid; align-items:center;
+      grid-template-columns: repeat(auto-fill, minmax(240px,1fr));
+      gap:.5rem; padding:1rem;
+    }
+    .thumb-img, .thumb-video {
+      width:100%;
+      aspect-ratio:1;
+      object-fit:cover;
+      border-radius:.25rem;
+      cursor:pointer; opacity:0;
+      animation:fadeIn .4s forwards;
+      transition:transform .2s ease;
+    }
+    #gallery.natural .thumb-img,
+    #gallery.natural .thumb-video {
+      aspect-ratio: auto;
+      object-fit: contain;
+      height: auto;
+    }
+    .thumb-img:hover, .thumb-video:hover { transform:scale(1.05); }
+    @keyframes fadeIn { to { opacity:1; } }
+    #no-results, #error {
+      text-align:center; padding:1rem;
+      color:#aaa; font-size:1rem;
+    }
+    #overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.9);
+      display: none; align-items: center; justify-content: center;
+      overflow: auto; padding: 2rem; z-index: 1000;
+    }
+    #overlay.open { display: flex; }
+    #media-container {
+      display: flex; align-items: center; justify-content: center;
+    }
+    #media-container img,
+    #media-container video {
+      width: auto; height: auto;
+      max-width: calc(100vw - 2rem);
+      max-height: calc(100vh - 2rem);
+      object-fit: contain;
+    }
+    .nav-btn {
+      font-size: 2rem; color: #e0e0e0;
+      background: none; cursor: pointer;
+      position: fixed; top: 50%;
+      transform: translateY(-50%);
+      transition: transform .2s ease; z-index: 1010;
+      touch-action: manipulation;
+    }
+    .nav-btn:hover { transform: translateY(-50%) scale(1.1); }
+    #prev { left: 1rem; }
+    #next { right: 1rem; }
+    @media (max-width: 600px) {
+      html { font-size: 100%; }
+      #gallery {
+        grid-template-columns: repeat(auto-fill, minmax(180px,1fr));
+        padding: .5rem;
+      }
+      #search-bar { padding: .4rem .8rem; gap: .4rem; }
+      #search-input { font-size: .9rem; padding: .5rem; }
+      #go-btn { font-size: .9rem; padding: 0 .8rem; }
+      .nav-btn { font-size: 1.75rem; }
+    }
+  </style>
+</head>
+<body>
+  <div id="site-container">
+    <div id="loading-bar"></div>
+    <header>
+      <div id="search-bar">
+        <input id="search-input" type="text" placeholder="Tags, comma-separated">
+        <button id="settings-btn" aria-label="Settings">
+          <img src="https://em-content.zobj.net/source/twitter/408/gear_2699-fe0f.png" alt="Settings" draggable="false">
+        </button>
+        <button id="go-btn">Go</button>
+      </div>
+    </header>
+    <div id="settings-backdrop"></div>
+    <div id="settings-menu">
+      <div class="header-container">
+        <h2>grbr.xyz</h2>
+        <a href="https://github.com" target="_blank" class="version-link">v1</a>
+      </div>
+      <label><input id="anti-ai" type="checkbox"><span>Hide AI</span></label>
+      <label><input id="hide-webm" type="checkbox"><span>Hide Videos</span></label>
+      <label><input id="natural-aspect" type="checkbox"><span>Show Original Sizes</span></label>
+    </div>
+    <main>
+      <div id="initial">no content here… yet… :P</div>
+      <div id="gallery"></div>
+      <div id="no-results" style="display:none;">No results.</div>
+      <div id="error" style="display:none;"></div>
+      <div id="sentinel"></div>
+    </main>
+  </div>
+  <div id="overlay">
+    <div id="media-container"></div>
+    <div id="prev" class="nav-btn">◀</div>
+    <div id="next" class="nav-btn">▶</div>
+  </div>
+  <script>
+    window.addEventListener('beforeunload', () => {
+      sessionStorage.clear();
+    });
+
+    const input            = document.getElementById('search-input'),
+          goBtn            = document.getElementById('go-btn'),
+          settingsBtn      = document.getElementById('settings-btn'),
+          settingsMenu     = document.getElementById('settings-menu'),
+          settingsBackdrop = document.getElementById('settings-backdrop'),
+          antiAiCheckbox   = document.getElementById('anti-ai'),
+          hideWebmCheckbox = document.getElementById('hide-webm'),
+          naturalCheckbox  = document.getElementById('natural-aspect'),
+          gallery          = document.getElementById('gallery'),
+          initialMsg       = document.getElementById('initial'),
+          noResults        = document.getElementById('no-results'),
+          errorBox         = document.getElementById('error'),
+          loadingBar       = document.getElementById('loading-bar'),
+          sentinel         = document.getElementById('sentinel'),
+          overlay          = document.getElementById('overlay'),
+          mediaContainer   = document.getElementById('media-container'),
+          prevBtn          = document.getElementById('prev'),
+          nextBtn          = document.getElementById('next');
+
+    let antiAi = false,
+        hideWebm = false,
+        naturalAspect = false,
+        page = 0,
+        isLoading = false,
+        searchPerformed = false,
+        tags = [],
+        items = [],
+        currentIndex = 0;
+
+    window.addEventListener('DOMContentLoaded', () => {
+      input.value = '';
+      const savedAntiAi    = sessionStorage.getItem('antiAi') === 'true';
+      const savedHideWebm  = sessionStorage.getItem('hideWebm') === 'true';
+      const savedNatural   = sessionStorage.getItem('naturalAspect') === 'true';
+      antiAiCheckbox.checked   = savedAntiAi;
+      hideWebmCheckbox.checked = savedHideWebm;
+      naturalCheckbox.checked  = savedNatural;
+      antiAi        = savedAntiAi;
+      hideWebm      = savedHideWebm;
+      naturalAspect = savedNatural;
+      gallery.classList.toggle('natural', naturalAspect);
+      settingsMenu.classList.remove('open');
+      settingsBackdrop.style.display = 'none';
+    });
+
+    settingsBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      const open = !settingsMenu.classList.contains('open');
+      settingsMenu.classList.toggle('open');
+      settingsBackdrop.style.display = open ? 'block' : 'none';
+    });
+    settingsBackdrop.addEventListener('click', () => {
+      settingsMenu.classList.remove('open');
+      settingsBackdrop.style.display = 'none';
+    });
+    antiAiCheckbox.addEventListener('change', () => {
+      antiAi = antiAiCheckbox.checked;
+      sessionStorage.setItem('antiAi', antiAi);
+    });
+    hideWebmCheckbox.addEventListener('change', () => {
+      hideWebm = hideWebmCheckbox.checked;
+      sessionStorage.setItem('hideWebm', hideWebm);
+    });
+    naturalCheckbox.addEventListener('change', () => {
+      naturalAspect = naturalCheckbox.checked;
+      gallery.classList.toggle('natural', naturalAspect);
+      sessionStorage.setItem('naturalAspect', naturalAspect);
+    });
+
+    function buildUrl() {
+      const base = 'https://api.rule34.xxx/index.php?page=dapi&s=post&q=index&json=1';
+      let allTags = [...tags];
+      if (antiAi)   allTags.push('-ai_generated');
+      if (hideWebm) allTags.push('-webm');
+      return base
+        + '&tags=' + allTags.map(t => encodeURIComponent(t.replace(/\s+/g, '_'))).join('+')
+        + '&pid=' + page;
+    }
+
+    async function fetchBatch() {
+      if (!searchPerformed || isLoading) return;
+      isLoading = true;
+      if (page === 0) loadingBar.style.width = '100%';
+      try {
+        const res  = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(buildUrl()));
+        if (!res.headers.get('content-type')?.includes('application/json')) throw new Error();
+        const data = await res.json();
+        if (page === 0 && data.length === 0) {
+          noResults.style.display = 'block';
+        } else {
+          data.forEach(item => {
+            items.push(item);
+            const idx = items.length - 1;
+            let thumb;
+            if (/\.webm$/i.test(item.file_url)) {
+              thumb = document.createElement('video');
+              thumb.src = item.file_url;
+              thumb.poster = item.sample_url;
+              thumb.muted = true; thumb.loop = true; thumb.autoplay = true; thumb.playsInline = true;
+              thumb.setAttribute('draggable', 'false');
+            } else {
+              thumb = document.createElement('img');
+              thumb.src = item.sample_url;
+              thumb.setAttribute('draggable', 'false');
+            }
+            thumb.className = /\.webm$/i.test(item.file_url) ? 'thumb-video' : 'thumb-img';
+            thumb.addEventListener('click', () => openOverlay(idx));
+            gallery.appendChild(thumb);
+          });
+          page++;
+        }
+      } catch {
+        errorBox.innerHTML = 'hmm.. something went wrong… <span id="retry" style="text-decoration:underline;cursor:pointer;">Retry?</span>';
+        errorBox.style.display = 'block';
+        document.getElementById('retry').addEventListener('click', doSearch);
+      } finally {
+        isLoading = false;
+        loadingBar.style.width = '0';
+      }
+    }
+
+    function doSearch() {
+      sessionStorage.clear();
+      tags = input.value.split(',').map(t => t.trim()).filter(Boolean);
+      page = 0; items.length = 0; gallery.innerHTML = '';
+      noResults.style.display = errorBox.style.display = 'none';
+      initialMsg.style.display = 'none';
+      searchPerformed = true;
+      gallery.classList.toggle('natural', naturalAspect);
+      fetchBatch();
+    }
+
+    goBtn.addEventListener('click', doSearch);
+    input.addEventListener('keydown', e => e.key === 'Enter' && doSearch());
+
+    new IntersectionObserver(entries => {
+      if (searchPerformed && entries[0].isIntersecting && !isLoading) fetchBatch();
+    }, { root: document.querySelector('main'), rootMargin: '200px', threshold: 0 })
+      .observe(sentinel);
+
+    function openOverlay(idx) {
+      currentIndex = idx;
+      mediaContainer.innerHTML = '';
+      const item = items[idx];
+      if (/\.webm$/i.test(item.file_url)) {
+        const vid = document.createElement('video');
+        vid.src = item.file_url;
+        vid.controls = true; vid.autoplay = true; vid.playsInline = true;
+        vid.setAttribute('draggable', 'false');
+        mediaContainer.appendChild(vid);
+      } else {
+        const img = document.createElement('img');
+        img.src = item.file_url;
+        img.setAttribute('draggable', 'false');
+        mediaContainer.appendChild(img);
+      }
+      overlay.classList.add('open');
+    }
+
+    function closeOverlay() { overlay.classList.remove('open'); }
+    overlay.addEventListener('click', closeOverlay);
+    mediaContainer.addEventListener('click', e => e.stopPropagation());
+    prevBtn.addEventListener('click', e => { e.stopPropagation(); if (currentIndex > 0) openOverlay(currentIndex - 1); });
+    nextBtn.addEventListener('click', e => { e.stopPropagation(); if (currentIndex < items.length - 1) openOverlay(currentIndex + 1); });
+    document.addEventListener('keydown', e => {
+      if (!overlay.classList.contains('open')) return;
+      if (e.key === 'ArrowLeft') prevBtn.click();
+      if (e.key === 'ArrowRight') nextBtn.click();
+      if (e.key === 'Escape') closeOverlay();
+    });
+  </script>
+  <!--onlyrc 2025-->
+</body>
+</html> 
