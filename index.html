@@ -76,16 +76,9 @@
       transition: transform .2s ease;
     }
     #settings-btn { background: transparent; padding: 0; }
-    #settings-btn img { width: 1.25rem; height: 1.25rem; }
-    #settings-btn:active { transform: scale(.9); }
-    #go-btn {
-      background: #3d5afe;
-      border-radius: .25rem;
-      padding: 0 1rem;
-      color: #fff;
-      font-size: 1rem;
-    }
-    #go-btn:active { transform: scale(.95); }
+    #settings-btn img, #go-btn img { width: 1.25rem; height: 1.25rem; }
+    #settings-btn:active, #go-btn:active { transform: scale(.9); }
+    #go-btn { background: #3d5afe; border-radius: .25rem; padding: .5rem; display: flex; }
     #settings-backdrop { position: fixed; inset: 0; display: none; z-index: 240; }
     #settings-menu {
       position: fixed;
@@ -226,7 +219,7 @@
       }
       #search-bar { padding: .4rem .8rem; gap: .4rem; }
       #search-input { font-size: .9rem; padding: .5rem; }
-      #go-btn { font-size: .9rem; padding: 0 .8rem; }
+      #go-btn { padding: 0 .8rem; }
       .nav-btn { font-size: 1.75rem; }
     }
   </style>
@@ -236,11 +229,13 @@
     <div id="loading-bar"></div>
     <header>
       <div id="search-bar">
-        <input id="search-input" type="text" placeholder="Tags, comma-separated">
+        <input id="search-input" type="text" placeholder="Tags (ex. tag1 tag2)">
         <button id="settings-btn" aria-label="Settings">
           <img src="https://em-content.zobj.net/source/twitter/408/gear_2699-fe0f.png" alt="Settings" draggable="false">
         </button>
-        <button id="go-btn">Go</button>
+        <button id="go-btn" aria-label="Search">
+          <img src="https://em-content.zobj.net/source/twitter/408/magnifying-glass-tilted-left_1f50d.png" alt="Search" draggable="false">
+        </button>
       </div>
     </header>
     <div id="settings-backdrop"></div>
@@ -248,7 +243,7 @@
       <div class="header-container">
         <div class="title-row">
           <h2>grbr.xyz</h2>
-          <a href="https://github.com/grbrxyz/grbr.xyz" target="_blank" class="version-link">v1.1</a>
+          <a href="https://github.com/grbrxyz/grbr.xyz" target="_blank" class="version-link">v1.2</a>
         </div>
         <p class="subtitle">
           minimalist endless <a href="https://rule34.xxx/" target="_blank">r34</a> viewer
@@ -306,7 +301,7 @@
         currentIndex = 0;
 
     window.addEventListener('DOMContentLoaded', () => {
-      document.title = 'grbr.xyz - minimalist r34 viewer';
+      document.title = 'grbr.xyz - endless r34 viewer';
       input.value = '';
 
       const raw = sessionStorage.getItem('antiAi');
@@ -354,7 +349,7 @@
     function buildUrl() {
       const base = 'https://api.rule34.xxx/index.php?page=dapi&s=post&q=index&json=1';
       let allTags = [...tags];
-      if (antiAi)   allTags.push('-ai_generated');
+      if (antiAi)   allTags.push('-ai_generated', '-ai_assisted');
       if (hideWebm) allTags.push('-webm');
       return base
         + '&tags=' + allTags.map(t => encodeURIComponent(t.replace(/\s+/g, '_'))).join('+')
@@ -405,7 +400,7 @@
 
     function doSearch() {
       sessionStorage.clear();
-      tags = input.value.split(',').map(t => t.trim()).filter(Boolean);
+      tags = input.value.trim().split(/\s+/).map(t => t.trim()).filter(Boolean);
       const searchText = tags.join(', ') || 'minimalist r34 viewer';
       document.title = `grbr.xyz - ${searchText}`;
       page = 0; items.length = 0; gallery.innerHTML = '';
@@ -458,7 +453,7 @@
       if (e.key === 'ArrowRight') nextBtn.click();
       if (e.key === 'Escape') closeOverlay();
     });
-  </script>
+</script>
   <!--onlyrc 2025-->
 </body>
 </html>
