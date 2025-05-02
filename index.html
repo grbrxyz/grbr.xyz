@@ -401,7 +401,7 @@
     function doSearch() {
       sessionStorage.clear();
       tags = input.value.trim().split(/\s+/).map(t => t.trim()).filter(Boolean);
-      const searchText = tags.join(', ') || 'minimalist r34 viewer';
+      const searchText = tags.join(', ') || 'endless r34 viewer';
       document.title = `grbr.xyz - ${searchText}`;
       page = 0; items.length = 0; gallery.innerHTML = '';
       noResults.style.display = errorBox.style.display = 'none';
