@@ -4,156 +4,148 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <title>grbr.xyz - endless booru viewer</title>
-  <link rel="icon" type="image/x-icon"
-        href="https://em-content.zobj.net/source/twitter/408/flag-palestinian-territories_1f1f5-1f1f8.png">
+  <link rel="icon" href="https://em-content.zobj.net/source/twitter/408/flag-palestinian-territories_1f1f5-1f1f8.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
-        rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    html {
-      font-size: 200%;
-      height: 100%;
-      width: 100%;
-      -webkit-text-size-adjust: 100%;
-    }
-    body {
-      height: 100%;
-      width: 100%;
-    }
-    *:not(input) {
-      -webkit-user-select: none;
-      -moz-user-select: none;
-      -ms-user-select: none;
-      user-select: none;
-    }
-    img, video {
-      -webkit-user-drag: none;
-      user-select: none;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+    html { font-size: 200%; height: 100%; width: 100%; -webkit-text-size-adjust: 100%; }
+    body { height: 100%; width: 100%; }
+    *:not(input) { user-select: none; }
+    img, video { -webkit-user-drag: none; user-select: none; }
+
     #site-container {
       background: #121212;
       color: #e0e0e0;
-      font-family: 'Inter', sans-serif;
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-      width: 100%;
-      overflow: hidden;
+      display: flex; flex-direction: column;
+      height: 100%; width: 100%; overflow: hidden;
     }
     header {
-      position: fixed;
-      top: 0; left: 0;
+      position: fixed; top: 0; left: 0;
       width: 100%; height: 3.5rem;
-      pointer-events: none;
-      z-index: 100;
+      pointer-events: none; z-index: 100;
     }
     #search-bar {
-      pointer-events: all;
-      position: absolute;
-      top: 1rem; left: 50%;
-      transform: translateX(-50%);
-      display: flex; gap: .5rem;
-      padding: .5rem 1rem;
-      border-radius: .75rem;
-      backdrop-filter: blur(8px);
-      background: rgba(0,0,0,0.4);
-      align-items: center;
+        pointer-events: all;
+        position: absolute;
+        top: 1rem;
+        left: 50%;
+        width: 80%;
+        max-width: 20rem;
+        transform: translateX(-50%);
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        padding: .75rem 1rem;
+        border-radius: 1.5rem;
+        backdrop-filter: blur(8px);
+        background: rgba(0,0,0,0.4);
+        z-index: 110
     }
-    #search-input {
-      flex: 1;
-      border: none;
-      border-radius: .25rem;
-      padding: .6rem;
-      background: rgba(255,255,255,0.15);
-      color: #bcbcbc;
-      font-size: 1rem;
-      -webkit-user-select: text;
-      user-select: text;
+    .tag-list {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: .4rem;
+        padding: .3rem .5rem;
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: .75rem;
+        background: rgba(255,255,255,0.05);
+        white-space: nowrap;
+        overflow-x: auto;
+        height: 2.4rem;
+        position: relative;
+        scrollbar-width: none;
     }
-    #search-input::placeholder { color: #bcbcbc; }
+    .tag-list::-webkit-scrollbar { height: 2px; }
+    .tag-list::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.2);
+      border-radius: 3px;
+    }
+    .tag-list input {
+      border: none; background: transparent;
+      color: #bcbcbc; font-size: 1rem; padding: .2rem;
+      outline: none; min-width: 4rem; width: auto;
+    }
+    .tag-bubble {
+      display: inline-flex; align-items: center;
+      background: #3d5afe50; color: #fff;
+      padding: 0 .6rem; border-radius: 1rem;
+      font-size: .9rem; line-height: 1.8rem; height: 1.8rem;
+      flex-shrink: 0;
+    }
+    .tag-bubble.pending-deletion {
+      background: rgba(255,255,255,0.5);
+      color: #fff;
+    }
+    .tag-bubble .remove-btn {
+      margin-left: .4rem; cursor: pointer; font-weight: bold;
+    }
     #settings-btn, #go-btn {
-      border: none; cursor: pointer;
-      transition: transform .2s ease;
+      border: none; cursor: pointer; transition: transform .2s ease;
     }
     #settings-btn { background: transparent; padding: 0; }
-    #settings-btn img, #go-btn img { width: 1.25rem; height: 1.25rem; }
+    #settings-btn img, #go-btn img {
+      width: 1.25rem; height: 1.25rem; filter: invert(1); opacity: .8;
+    }
     #settings-btn:active, #go-btn:active { transform: scale(.9); }
-    #go-btn { background: #3d5afe; border-radius: .25rem; padding: .5rem; display: flex; }
-    #settings-backdrop { position: fixed; inset: 0; display: none; z-index: 240; }
+    #go-btn {
+      background: #3d5afeaa; border-radius: .75rem;
+      padding: .5rem; display: flex;
+    }
+    #settings-backdrop {
+      position: fixed; inset: 0; display: none; z-index: 240;
+    }
     #settings-menu {
-      position: fixed;
-      top:50%; left:50%;
+      position: fixed; top: 50%; left: 50%;
       transform: translate(-50%,-50%) scale(.95);
-      width:90%; max-width:20rem;
-      padding:1.5rem; border-radius:12px;
+      width: 90%; max-width: 20rem;
+      padding: 1.5rem; border-radius: 12px;
       backdrop-filter: blur(12px);
       background: rgba(0,0,0,0.4);
       color: #e0e0e0;
-      opacity:0; pointer-events:none;
+      opacity: 0; pointer-events: none;
       transition: opacity .2s ease, transform .2s ease;
-      z-index:250;
+      z-index: 250;
     }
     #settings-menu.open {
       opacity:1; pointer-events:all; transform: translate(-50%,-50%) scale(1);
     }
     #settings-menu .header-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin-bottom: 1rem;
+      display: flex; flex-direction: column; align-items: center; margin-bottom: 1rem;
     }
-    #settings-menu .header-container .title-row {
-      display: flex;
-      justify-content: center;
-      align-items: flex-end;
-      gap: 0.1rem;
+    #settings-menu .title-row {
+      display: flex; align-items: flex-end; gap: .1rem;
     }
     #settings-menu h2 {
-      font-size: 1.75rem;
-      color: #C8A2C8;
-      margin: 0;
-      line-height: 1;
+      font-size: 1.75rem; color: #C8A2C8; margin: 0; line-height: 1;
     }
     #settings-menu .version-link {
-      font-size: 0.75rem;
-      color: #C8A2C8;
-      text-decoration: none;
-      cursor: default;
-      margin-left: 0.1rem;
+      font-size: .75rem; color: #C8A2C8;
+      text-decoration: none; cursor: default;
+      margin-left: .1rem;
     }
     #settings-menu .subtitle {
-      font-size: 1rem;
-      color: #C8A2C8;
-      font-weight: 250;
-      margin: 0.25rem 0;
-      line-height: 1;
+      font-size: 1rem; color: #C8A2C8;
+      font-weight: 250; margin: .25rem 0; line-height:1;
     }
     #settings-menu label {
-      display:flex; align-items:center; gap:.5rem;
-      margin-bottom:.75rem;
+      display:flex; align-items:center; gap:.5rem; margin-bottom:.75rem;
     }
     #settings-menu input[type="checkbox"] {
       width:1.2rem; height:1.2rem;
     }
     #settings-menu select {
-      flex: 1;
-      border: none;
-      border-radius: .25rem;
-      padding: .6rem;
-      background: rgba(255,255,255,0.15);
-      color: #bcbcbc;
-      font-size: 1rem;
-      -webkit-user-select: none;
-      user-select: none;
-      cursor: pointer;
+      flex:1; border:none; border-radius:.25rem;
+      padding:.6rem; background:rgba(255,255,255,0.15);
+      color:#bcbcbc; font-size:1rem; cursor:pointer;
     }
     #loading-bar {
       position: fixed; top:0; left:0;
       height:3px; background:#536dfe;
-      width:0; transition:width .2s;
-      z-index:150;
+      width:0; transition: width .2s; z-index:150;
     }
     main {
       flex:1; position:relative;
@@ -171,13 +163,9 @@
       gap:.5rem; padding:1rem;
     }
     .thumb-img, .thumb-video {
-      width:100%;
-      aspect-ratio:1;
-      object-fit:cover;
-      border-radius:.25rem;
-      cursor:pointer;
-      opacity:0;
-      transition: opacity .4s ease-in-out, transform .2s ease;
+      width:100%; aspect-ratio:1; object-fit:cover;
+      border-radius:.25rem; cursor:pointer;
+      opacity:0; transition: opacity .4s ease-in-out, transform .2s ease;
     }
     #gallery.natural .thumb-img,
     #gallery.natural .thumb-video {
@@ -186,97 +174,83 @@
       height: auto;
     }
     .thumb-img:hover, .thumb-video:hover { transform:scale(1.05); }
+
     #error {
-      text-align:center; padding:1rem;
-      color:#aaa; font-size:1rem;
+      text-align:center; padding:1rem; color:#aaa; font-size:1rem;
     }
     #overlay {
-      position: fixed; inset: 0;
+      position: fixed; inset:0;
       background: rgba(0,0,0,0.9);
-      display: none; align-items: center; justify-content: center;
-      overflow: auto; padding: 2rem; z-index: 1000;
+      display: none; align-items:center; justify-content:center;
+      padding: 2rem;
+      overflow: hidden;
+      z-index:1000;
     }
-    #overlay.open { display: flex; }
+    #overlay.open { display:flex;
+    }
     #media-container {
-      display: flex; align-items: center; justify-content: center;
+      display:flex; align-items:center; justify-content:center;
     }
     #media-container img,
     #media-container video {
-      width: auto; height: auto;
-      max-width: calc(100vw - 2rem);
-      max-height: calc(100vh - 2rem);
+      max-width: calc(100vw - 4rem);
+      max-height: calc(100vh - 4rem);
       object-fit: contain;
       cursor: default;
-      opacity: 1;
-      animation: none;
     }
     .nav-btn {
-      font-size: 2rem; color: #e0e0e0;
-      background: none; cursor: pointer;
-      position: fixed; top: 50%;
-      transform: translateY(-50%);
-      transition: transform .2s ease; z-index: 1010;
-      touch-action: manipulation;
+      position:fixed; top:50%; transform:translateY(-50%);
+      font-size:2rem; color:#e0e0e0; background:none;
+      cursor:pointer; transition:transform .2s ease; z-index:1010;
+      touch-action:manipulation;
     }
-    .nav-btn:hover { transform: translateY(-50%) scale(1.1); }
-    #prev { left: 1rem; }
-    #next { right: 1rem; }
+    .nav-btn:hover { transform:translateY(-50%) scale(1.1); }
+    #prev { left:1rem; } #next { right:1rem; }
     #overlay-controls {
-      position: fixed;
-      bottom: 1rem; right: 1rem;
-      display: flex; gap: .5rem;
-      z-index: 1015;
+      position:fixed; bottom:1rem; right:1rem;
+      display:flex; gap:.5rem; z-index:1015;
     }
     #overlay-controls a {
-      display: block;
-      width: 2rem; height: 2rem;
-      opacity: .6;
-      transition: opacity .2s ease, transform .2s ease;
+      width:2rem; height:2rem; opacity:.6;
+      transition:opacity .2s ease, transform .2s ease;
+      display:block;
     }
-    #overlay-controls a:hover {
-      opacity: 1;
-      transform: scale(1.1);
-    }
-    #overlay-controls img {
-      width: 100%; height: 100%;
-      filter: invert(1);
-    }
+    #overlay-controls a:hover { opacity:1; transform:scale(1.1); }
+    #overlay-controls img { width:100%; height:100%; filter:invert(1); }
 
-    @media (max-width: 600px) {
-      html { font-size: 100%; }
+    .thumb-video-wrapper {
+      position:relative; width:100%;
+    }
+    .thumb-video-wrapper .thumb-video {
+      width:100%; height:auto; display:block;
+    }
+    .thumb-video-wrapper::after {
+      content:"\25B6"; position:absolute; top:50%; left:50%;
+      transform:translate(-50%,-50%); font-size:1.5rem;
+      color:rgba(255,255,255,0.5); opacity:0;
+      transition:opacity .3s ease; pointer-events:none;
+    }
+    .thumb-video-wrapper.loaded::after { opacity:1; }
+
+    @media (max-width:600px) {
+      html { font-size:100%; }
       #gallery {
-        grid-template-columns: repeat(auto-fill, minmax(180px,1fr));
-        padding: .5rem;
+        grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+        padding:.5rem;
       }
-      #search-bar {
-        padding: .6rem 1rem;
-        gap: .6rem;
-      }
-      #search-input {
-        font-size: 1rem;
-        padding: .6rem;
-      }
+      #search-bar { padding:.6rem 1rem; gap:.6rem; }
+      .tag-list input { font-size:1rem; padding:.6rem .2rem; }
       #go-btn {
-        width: 2.5rem;
-        height: 2.5rem;
-        padding: 0;
-        border-radius: .5rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        width:2.5rem; height:2.5rem; padding:0;
+        border-radius:.5rem; display:flex;
+        align-items:center; justify-content:center;
       }
-      #go-btn img {
-        width: 1.25rem;
-        height: 1.25rem;
-      }
-      .nav-btn { font-size: 1.75rem; }
+      #go-btn img { width:1.25rem; height:1.25rem; }
+      .nav-btn { font-size:1.75rem; }
       #overlay-controls {
-        bottom: .5rem; right: .5rem;
-        gap: .4rem;
+        bottom:.5rem; right:.5rem; gap:.4rem;
       }
-      #overlay-controls a {
-        width: 1.75rem; height: 1.75rem;
-      }
+      #overlay-controls a { width:1.75rem; height:1.75rem; }
     }
   </style>
 </head>
@@ -285,33 +259,30 @@
     <div id="loading-bar"></div>
     <header>
       <div id="search-bar">
-        <input id="search-input" type="text" placeholder="Tags (ex. tag1 tag2)">
+        <div class="tag-list" id="tag-list" tabindex="0">
+          <input id="search-input" type="text" placeholder="Type tags…" autocomplete="off">
+        </div>
         <button id="settings-btn" aria-label="Settings">
-          <img src="https://em-content.zobj.net/source/twitter/408/gear_2699-fe0f.png"
-               alt="Settings" draggable="false">
+          <img src="https://www.svgrepo.com/show/422495/gear-setting-settings.svg" draggable="false" alt="Settings">
         </button>
         <button id="go-btn" aria-label="Search">
-          <img src="https://em-content.zobj.net/source/twitter/408/magnifying-glass-tilted-left_1f50d.png"
-               alt="Search" draggable="false">
+          <img src="https://www.svgrepo.com/show/479907/search.svg" draggable="false" alt="Search">
         </button>
       </div>
     </header>
+
     <div id="settings-backdrop"></div>
     <div id="settings-menu">
       <div class="header-container">
         <div class="title-row">
           <h2>grbr.xyz</h2>
-          <a href="https://github.com/grbrxyz/grbr.xyz" target="_blank"
-             class="version-link">v1.3.1</a>
+          <a href="https://github.com/grbrxyz/grbr.xyz" target="_blank" class="version-link">v1.4</a>
         </div>
-        <p class="subtitle">
-          minimalist endless booru viewer
-        </p>
+        <p class="subtitle">minimalist endless booru viewer</p>
       </div>
-      <label>
-        <span>Source</span>
+      <label><span>Source</span>
         <select id="source-select">
-          <option value="rule34">Rule34</option>
+          <option value="rule34">r34</option>
           <option value="e621">e621</option>
         </select>
       </label>
@@ -319,6 +290,7 @@
       <label><input id="hide-extreme" type="checkbox"><span>Hide Extreme Content</span></label>
       <label><input id="natural-aspect" type="checkbox"><span>Show Original Sizes</span></label>
     </div>
+
     <main>
       <div id="initial">no content here… yet… :P</div>
       <div id="gallery"></div>
@@ -326,14 +298,17 @@
       <div id="sentinel"></div>
     </main>
   </div>
+
   <div id="overlay">
     <div id="media-container"></div>
     <div id="overlay-controls"></div>
     <div id="prev" class="nav-btn">&#9668;</div>
     <div id="next" class="nav-btn">&#9658;</div>
   </div>
+
   <script>
-    const input            = document.getElementById('search-input'),
+    const tagListEl        = document.getElementById('tag-list'),
+          inputEl          = document.getElementById('search-input'),
           goBtn            = document.getElementById('go-btn'),
           settingsBtn      = document.getElementById('settings-btn'),
           settingsMenu     = document.getElementById('settings-menu'),
@@ -353,244 +328,313 @@
           prevBtn          = document.getElementById('prev'),
           nextBtn          = document.getElementById('next');
 
-    let hideAi = false,
-        hideExtreme = false,
-        naturalAspect = false,
-        source = 'rule34',
+    let tags = [],
         page = 0,
         isLoading = false,
         searchPerformed = false,
-        tags = [],
         items = [],
-        currentIndex = 0;
+        currentIndex = 0,
+        hideAi = true,
+        hideExtreme = false,
+        naturalAspect = false,
+        source = 'rule34',
+        pendingDeletionIndex = null;
 
+    inputEl.addEventListener('blur', () => {
+      tagListEl.scrollTo({ left: 0, behavior: 'smooth' });
+    });
+
+    function renderTags(){
+      tagListEl.innerHTML = '';
+      if (pendingDeletionIndex !== null && (pendingDeletionIndex < 0 || pendingDeletionIndex >= tags.length)) {
+        pendingDeletionIndex = null;
+      }
+      tags.forEach((t,i)=>{
+        const span = document.createElement('span');
+        span.className = 'tag-bubble';
+        if (i === pendingDeletionIndex) {
+          span.classList.add('pending-deletion');
+        }
+        span.tabIndex = 0;
+        span.textContent = t;
+        span.addEventListener('keydown', e => {
+          const bs = Array.from(tagListEl.querySelectorAll('.tag-bubble')),
+                idx = bs.indexOf(span);
+          if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            if (idx > 0) bs[idx-1].focus();
+          }
+          else if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            if (idx < bs.length - 1) bs[idx+1].focus();
+            else {
+              inputEl.focus();
+              inputEl.setSelectionRange(0,0);
+            }
+          }
+          else if (e.key === 'Backspace') {
+            e.preventDefault();
+            if (pendingDeletionIndex !== idx) {
+              pendingDeletionIndex = idx;
+              renderTags();
+              const bs2 = tagListEl.querySelectorAll('.tag-bubble');
+              if (bs2[pendingDeletionIndex]) bs2[pendingDeletionIndex].focus();
+            } else {
+              tags.splice(idx,1);
+              pendingDeletionIndex = null;
+              renderTags();
+              inputEl.focus();
+            }
+          }
+        });
+        const rem = document.createElement('span');
+        rem.className = 'remove-btn';
+        rem.textContent = '×';
+        rem.addEventListener('mousedown', e => e.preventDefault());
+        rem.onclick = () => {
+          tags.splice(i,1);
+          pendingDeletionIndex = null;
+          renderTags();
+          inputEl.focus();
+        };
+        span.appendChild(rem);
+        tagListEl.appendChild(span);
+      });
+      tagListEl.appendChild(inputEl);
+      inputEl.placeholder = tags.length ? '' : 'Type tags…';
+      inputEl.focus();
+    }
+
+    function addTag(text){
+      const t = text.trim();
+      if (!t || tags.includes(t)) return;
+      tags.push(t);
+      pendingDeletionIndex = null;
+      renderTags();
+    }
+
+    inputEl.addEventListener('keydown', e => {
+      if (e.key !== 'Backspace' && pendingDeletionIndex !== null) {
+        pendingDeletionIndex = null;
+        renderTags();
+      }
+
+      if (e.key === 'ArrowLeft' && inputEl.selectionStart === 0 && tags.length) {
+        e.preventDefault();
+        const bs = tagListEl.querySelectorAll('.tag-bubble');
+        bs[bs.length-1].focus();
+        return;
+      }
+
+      if (e.key === 'Enter') {
+        if (inputEl.value.trim()) {
+          e.preventDefault();
+          addTag(inputEl.value);
+          inputEl.value = '';
+        } else {
+          e.preventDefault();
+          doSearch();
+          inputEl.blur();
+        }
+      }
+      else if (e.key === ' ') {
+        e.preventDefault();
+        addTag(inputEl.value);
+        inputEl.value = '';
+      }
+      else if (e.key === 'Backspace' && !inputEl.value) {
+        e.preventDefault();
+        if (pendingDeletionIndex === null && tags.length) {
+          pendingDeletionIndex = tags.length - 1;
+          renderTags();
+        }
+        else if (pendingDeletionIndex === tags.length - 1) {
+          tags.splice(pendingDeletionIndex,1);
+          pendingDeletionIndex = null;
+          renderTags();
+        }
+      }
+    });
+
+    tagListEl.addEventListener('click', () => inputEl.focus());
     window.addEventListener('DOMContentLoaded', () => {
-      document.title = 'grbr.xyz - endless booru viewer';
-      input.value = '';
-
-      const rawAi = sessionStorage.getItem('hideAi');
-      const savedhideAi = rawAi !== null ? (rawAi === 'true') : true;
-      const savedhideExtreme  = sessionStorage.getItem('hideExtreme') === 'true';
-      const savedNatural   = sessionStorage.getItem('naturalAspect') === 'true';
-      const savedSource    = sessionStorage.getItem('source');
-
-      hideAiCheckbox.checked   = savedhideAi;
-      hideExtremeCheckbox.checked = savedhideExtreme;
-      naturalCheckbox.checked  = savedNatural;
-      hideAi        = savedhideAi;
-      hideExtreme   = savedhideExtreme;
-      naturalAspect = savedNatural;
-
-      if (savedSource) source = savedSource;
+      const ra = sessionStorage.getItem('hideAi'),
+            re = sessionStorage.getItem('hideExtreme'),
+            rn = sessionStorage.getItem('naturalAspect'),
+            rs = sessionStorage.getItem('source');
+      hideAi = ra === null ? true : ra === 'true';
+      hideExtreme = re === 'true';
+      naturalAspect = rn === 'true';
+      source = rs || 'rule34';
+      hideAiCheckbox.checked = hideAi;
+      hideExtremeCheckbox.checked = hideExtreme;
+      naturalCheckbox.checked = naturalAspect;
       sourceSelect.value = source;
-
       gallery.classList.toggle('natural', naturalAspect);
-      settingsMenu.classList.remove('open');
-      settingsBackdrop.style.display = 'none';
     });
 
-    settingsBtn.addEventListener('click', e => {
+    settingsBtn.onclick = e => {
       e.stopPropagation();
-      const open = !settingsMenu.classList.contains('open');
-      settingsMenu.classList.toggle('open');
-      settingsBackdrop.style.display = open ? 'block' : 'none';
-    });
-    settingsBackdrop.addEventListener('click', () => {
+      const o = !settingsMenu.classList.contains('open');
+      settingsMenu.classList.toggle('open', o);
+      settingsBackdrop.style.display = o ? 'block' : 'none';
+    };
+    settingsBackdrop.onclick = () => {
       settingsMenu.classList.remove('open');
       settingsBackdrop.style.display = 'none';
-    });
-
-    hideAiCheckbox.addEventListener('change', () => {
+    };
+    hideAiCheckbox.onchange = () => {
       hideAi = hideAiCheckbox.checked;
       sessionStorage.setItem('hideAi', hideAi);
-    });
-    hideExtremeCheckbox.addEventListener('change', () => {
+    };
+    hideExtremeCheckbox.onchange = () => {
       hideExtreme = hideExtremeCheckbox.checked;
       sessionStorage.setItem('hideExtreme', hideExtreme);
-    });
-    naturalCheckbox.addEventListener('change', () => {
+    };
+    naturalCheckbox.onchange = () => {
       naturalAspect = naturalCheckbox.checked;
       gallery.classList.toggle('natural', naturalAspect);
       sessionStorage.setItem('naturalAspect', naturalAspect);
-    });
-    sourceSelect.addEventListener('change', () => {
+    };
+    sourceSelect.onchange = () => {
       source = sourceSelect.value;
       sessionStorage.setItem('source', source);
-    });
+    };
 
-    function buildUrl() {
-      const allTags = tags.slice();
-      if (hideAi)      allTags.push('-ai_generated','-ai_assisted');
-      if (hideExtreme) allTags.push(
-        '-blood','-feces','-fart','-fecal_matter','-scat','-diaper',
-        '-urine','-urination','-watersports','-vomit','-vomiting','-puke',
-        '-gore','-vore','-body_horror','-mutilation','-dismemberment',
-        '-decapitation','-corpse','-necrophilia','-zoophilia','-bestiality',
-        '-feral','-rape','-non_con','-incest','-loli','-shota','-underage'
-      );
+    function buildUrl(){
+      const all = tags.slice();
+      if (hideAi) all.push('-ai_generated','-ai_assisted');
+      if (hideExtreme) all.push('-blood','-feces','-fart','-scat','-gore','-rape','-loli','-shota','-incest','-bestiality');
       if (source === 'rule34') {
         const base = 'https://api.rule34.xxx/index.php?page=dapi&s=post&q=index&json=1';
-        return base
-          + '&tags=' + allTags.map(t => encodeURIComponent(t.replace(/\s+/g,'_'))).join('+')
-          + '&pid=' + page;
+        return base + '&tags=' + all.map(t => encodeURIComponent(t.replace(/\s+/g,'_'))).join('+') + '&pid=' + page;
       } else {
-        const limit = 100;
-        const pageNum = page + 1;
-        const encodedTags = allTags
-          .map(t => encodeURIComponent(t.replace(/\s+/g,'_')))
-          .join('+');
-        return 'https://e621.net/posts.json?limit=' + limit
-             + '&page=' + pageNum
-             + (encodedTags ? '&tags=' + encodedTags : '');
+        const p = page + 1,
+              t = all.map(t => encodeURIComponent(t.replace(/\s+/g,'_'))).join('+');
+        return `https://e621.net/posts.json?limit=100&page=${p}` + (t ? `&tags=${t}` : '');
       }
     }
 
-    async function fetchBatch() {
+    async function fetchBatch(){
       if (!searchPerformed || isLoading) return;
       isLoading = true;
       if (page === 0) loadingBar.style.width = '100%';
-
       try {
-        const url = buildUrl();
-        const fetchUrl = source === 'rule34'
-          ? 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url)
-          : url;
-        const options = source === 'e621'
-          ? { headers: { 'User-Agent': 'grbr.xyz (endless booru viewer)' } }
-          : {};
-        const res = await fetch(fetchUrl, options);
-        if (!res.headers.get('content-type')?.includes('application/json')) throw new Error();
-        const data = await res.json();
-        const batch = source === 'rule34' ? data : data.posts;
-        if (page === 0 && (!batch || batch.length === 0)) {
+        const url   = buildUrl(),
+              fUrl  = source === 'rule34' ? 'https://corsproxy.io/?' + encodeURIComponent(url) : url,
+              opts  = source === 'e621' ? { headers:{ 'User-Agent':'grbr.xyz' } } : {};
+        const res = await fetch(fUrl, opts);
+        if (!res.headers.get('content-type')?.includes('application/json')) throw 0;
+        const data  = await res.json(),
+              batch = source === 'rule34' ? data : data.posts;
+        if (page === 0 && (!batch || !batch.length)) {
           errorBox.innerHTML = 'hmm.. something went wrong… <span id="retry" style="text-decoration:underline;cursor:pointer;">Retry?</span>';
           errorBox.style.display = 'block';
-          document.getElementById('retry').addEventListener('click', doSearch);
+          document.getElementById('retry').onclick = doSearch;
         } else {
           batch.forEach(post => {
-            let sampleUrl, fileUrl, linkUrl;
+            let sample, file, link;
             if (source === 'rule34') {
-              sampleUrl = post.sample_url;
-              fileUrl   = post.file_url;
-              linkUrl   = `https://rule34.xxx/index.php?page=post&s=view&id=${post.id}`;
+              sample = post.sample_url; file = post.file_url;
+              link   = `https://rule34.xxx/index.php?page=post&s=view&id=${post.id}`;
             } else {
-              if (!post.sample || !post.sample.url) return;
-              sampleUrl = post.sample.url;
-              fileUrl   = post.file.url;
-              linkUrl   = `https://e621.net/posts/${post.id}`;
+              if (!post.sample?.url) return;
+              sample = post.sample.url; file = post.file.url;
+              link   = `https://e621.net/posts/${post.id}`;
             }
-
-            items.push({ sample_url: sampleUrl, file_url: fileUrl, link_url: linkUrl });
+            items.push({ sample, file, link });
             const idx = items.length - 1;
-
-            const thumb = document.createElement('img');
-            thumb.src           = sampleUrl;
-            thumb.loading       = 'lazy';
-            thumb.draggable     = false;
-            thumb.fetchPriority = 'low';
-            thumb.className     = /\.(webm|mp4)($|\?)/i.test(fileUrl)
-                                  ? 'thumb-video' : 'thumb-img';
-            thumb.addEventListener('load', () => {
-              thumb.style.opacity = '1';
-            });
-            thumb.addEventListener('click', () => openOverlay(idx));
-            gallery.appendChild(thumb);
+            if (/\.(webm|mp4)(?:$|\?)/i.test(file)) {
+              const w = document.createElement('div');
+              w.className = 'thumb-video-wrapper';
+              const im = document.createElement('img');
+              im.src     = sample;
+              im.loading = 'lazy';
+              im.className = 'thumb-video';
+              im.onload  = () => { im.style.opacity='1'; w.classList.add('loaded'); };
+              w.appendChild(im);
+              w.onclick = () => openOverlay(idx);
+              gallery.appendChild(w);
+            } else {
+              const im = document.createElement('img');
+              im.src = sample; im.loading = 'lazy'; im.className = 'thumb-img';
+              im.onload = () => im.style.opacity = '1';
+              im.onclick = () => openOverlay(idx);
+              gallery.appendChild(im);
+            }
           });
           page++;
         }
       } catch {
         errorBox.innerHTML = 'hmm.. something went wrong… <span id="retry" style="text-decoration:underline;cursor:pointer;">Retry?</span>';
         errorBox.style.display = 'block';
-        document.getElementById('retry').addEventListener('click', doSearch);
+        document.getElementById('retry').onclick = doSearch;
       } finally {
         isLoading = false;
         loadingBar.style.width = '0';
       }
     }
-    function openOverlay(idx) {
-      currentIndex = idx;
+
+    function openOverlay(i){
+      currentIndex   = i;
       mediaContainer.innerHTML = '';
       overlayControls.innerHTML = '';
-
-      const item    = items[idx];
-      const isVideo = /\.(webm|mp4)($|\?)/i.test(item.file_url);
-
-      if (isVideo) {
-        const video = document.createElement('video');
-        video.controls      = true;
-        video.autoplay      = true;
-        video.playsInline   = true;
-        video.preload       = 'auto';
-        video.fetchPriority = 'high';
-        video.draggable     = false;
-        video.src           = item.file_url;
-        mediaContainer.appendChild(video);
+      const it = items[i];
+      if (/\.(webm|mp4)(?:$|\?)/i.test(it.file)) {
+        const v = document.createElement('video');
+        v.controls = v.autoplay = v.playsInline = true;
+        v.preload = 'auto';
+        v.src = it.file;
+        mediaContainer.appendChild(v);
       } else {
         const img = document.createElement('img');
-        img.src           = item.file_url;
-        img.draggable     = false;
-        img.fetchPriority = 'high';
+        img.src = it.file;
         mediaContainer.appendChild(img);
       }
-
       const dl = document.createElement('a');
-      dl.href     = item.file_url;
-      dl.target   = '_blank';
-      dl.download = '';
-      dl.draggable     = false;
-      dl.innerHTML = `<img src="https://www.svgrepo.com/show/510957/download.svg" draggable="false">`;
-      dl.addEventListener('click', e => e.stopPropagation());
+      dl.href = it.file; dl.download = ''; dl.target = '_blank';
+      dl.innerHTML = '<img src="https://www.svgrepo.com/show/510957/download.svg">';
       overlayControls.appendChild(dl);
-
       const link = document.createElement('a');
-      link.href       = item.link_url;
-      link.target     = '_blank';
-      link.rel        = 'noopener';
-      link.draggable     = false;
-      link.innerHTML  = `<img src="https://www.svgrepo.com/show/505044/url-checker.svg" draggable="false">`;
-      link.addEventListener('click', e => e.stopPropagation());
+      link.href = it.link; link.target = '_blank'; link.rel = 'noopener';
+      link.innerHTML = '<img src="https://www.svgrepo.com/show/505044/url-checker.svg">';
       overlayControls.appendChild(link);
       overlay.classList.add('open');
     }
-    function closeOverlay() {
-      mediaContainer.querySelectorAll('video').forEach(v => {
-        v.pause();
-        v.currentTime = 0;
-      });
-      overlay.classList.remove('open');
-      mediaContainer.innerHTML = '';
-      overlayControls.innerHTML = '';
-    }
-    overlay.addEventListener('click', closeOverlay);
-    mediaContainer.addEventListener('click', e => e.stopPropagation());
 
-    prevBtn.addEventListener('click', e => {
-      e.stopPropagation();
-      if (currentIndex > 0) openOverlay(currentIndex - 1);
-    });
-    nextBtn.addEventListener('click', e => {
-      e.stopPropagation();
-      if (currentIndex < items.length - 1) openOverlay(currentIndex + 1);
-    });
+    function closeOverlay(){
+      mediaContainer.querySelectorAll('video').forEach(v => { v.pause(); v.currentTime = 0; });
+      overlay.classList.remove('open');
+    }
+
+    overlay.onclick = closeOverlay;
+    mediaContainer.onclick = e => e.stopPropagation();
+    prevBtn.onclick = e => { e.stopPropagation(); if (currentIndex > 0) openOverlay(currentIndex - 1); };
+    nextBtn.onclick = e => { e.stopPropagation(); if (currentIndex < items.length - 1) openOverlay(currentIndex + 1); };
     document.addEventListener('keydown', e => {
       if (!overlay.classList.contains('open')) return;
       if (e.key === 'ArrowLeft') prevBtn.click();
       if (e.key === 'ArrowRight') nextBtn.click();
       if (e.key === 'Escape') closeOverlay();
     });
-    function doSearch() {
-      tags = input.value.trim().split(/\s+/).filter(Boolean);
-      document.title = `grbr.xyz - ${tags.join(', ') || 'endless booru viewer'}`;
-      page = 0;
-      items.length = 0;
-      gallery.innerHTML = '';
-      initialMsg.style.display = 'none';
-      errorBox.style.display = 'none';
+
+    const sourceLabel = {
+      rule34: 'r34',
+      e621:   'e621',
+    };
+
+    function doSearch(){
+      if (inputEl.value.trim()) { addTag(inputEl.value); inputEl.value = ''; }
+      page = 0; items = []; gallery.innerHTML = ''; initialMsg.style.display = 'none'; errorBox.style.display = 'none';
       searchPerformed = true;
+      document.title = tags.length
+        ? `grbr.xyz - ${sourceLabel[source] || source} - ${tags.join(', ')}`
+        : 'grbr.xyz - endless booru viewer';
       fetchBatch();
     }
-    goBtn.addEventListener('click', doSearch);
-    input.addEventListener('keydown', e => e.key === 'Enter' && doSearch());
+
+    goBtn.onclick = doSearch;
+
     new IntersectionObserver(entries => {
       if (searchPerformed && entries[0].isIntersecting && !isLoading) fetchBatch();
     }, {
