@@ -27,37 +27,37 @@
       pointer-events: none; z-index: 100;
     }
     #search-bar {
-        pointer-events: all;
-        position: absolute;
-        top: 1rem;
-        left: 50%;
-        width: 80%;
-        max-width: 20rem;
-        transform: translateX(-50%);
-        display: flex;
-        align-items: center;
-        gap: .5rem;
-        padding: .75rem 1rem;
-        border-radius: 1.5rem;
-        backdrop-filter: blur(8px);
-        background: rgba(0,0,0,0.4);
-        z-index: 110
+      pointer-events: all;
+      position: absolute;
+      top: 1rem;
+      left: 50%;
+      width: 80%;
+      max-width: 20rem;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      padding: .75rem 1rem;
+      border-radius: 1.5rem;
+      backdrop-filter: blur(8px);
+      background: rgba(0,0,0,0.4);
+      z-index: 110
     }
     .tag-list {
-        flex: 1;
-        min-width: 0;
-        display: flex;
-        align-items: center;
-        gap: .4rem;
-        padding: .3rem .5rem;
-        border: 1px solid rgba(255,255,255,0.2);
-        border-radius: .75rem;
-        background: rgba(255,255,255,0.05);
-        white-space: nowrap;
-        overflow-x: auto;
-        height: 2.4rem;
-        position: relative;
-        scrollbar-width: none;
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+      padding: .3rem .5rem;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: .75rem;
+      background: rgba(255,255,255,0.05);
+      white-space: nowrap;
+      overflow-x: auto;
+      height: 2.4rem;
+      position: relative;
+      scrollbar-width: none;
     }
     .tag-list::-webkit-scrollbar { height: 2px; }
     .tag-list::-webkit-scrollbar-thumb {
@@ -119,7 +119,7 @@
     #settings-menu .title-row {
       display: flex; align-items: flex-end; gap: .1rem;
     }
-    #settings-menu h2 {
+    #settings-menu h1 {
       font-size: 1.75rem; color: #C8A2C8; margin: 0; line-height: 1;
     }
     #settings-menu .version-link {
@@ -186,8 +186,7 @@
       overflow: hidden;
       z-index:1000;
     }
-    #overlay.open { display:flex;
-    }
+    #overlay.open { display:flex; }
     #media-container {
       display:flex; align-items:center; justify-content:center;
     }
@@ -229,6 +228,9 @@
       transform:translate(-50%,-50%); font-size:1.5rem;
       color:rgba(255,255,255,0.5); opacity:0;
       transition:opacity .3s ease; pointer-events:none;
+      font-family: "Segoe UI Symbol", Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
     .thumb-video-wrapper.loaded::after { opacity:1; }
 
@@ -260,7 +262,7 @@
     <header>
       <div id="search-bar">
         <div class="tag-list" id="tag-list" tabindex="0">
-          <input id="search-input" type="text" placeholder="Type tags…" autocomplete="off">
+          <input id="search-input" type="text" placeholder="type tags…" autocomplete="off">
         </div>
         <button id="settings-btn" aria-label="Settings">
           <img src="https://www.svgrepo.com/show/422495/gear-setting-settings.svg" draggable="false" alt="Settings">
@@ -270,13 +272,12 @@
         </button>
       </div>
     </header>
-
     <div id="settings-backdrop"></div>
     <div id="settings-menu">
       <div class="header-container">
         <div class="title-row">
-          <h2>grbr.xyz</h2>
-          <a href="https://github.com/grbrxyz/grbr.xyz" target="_blank" class="version-link">v1.4</a>
+          <h1>grbr.xyz</h1>
+          <a href="https://github.com/grbrxyz/grbr.xyz" target="_blank" class="version-link">v1.4.1</a>
         </div>
         <p class="subtitle">minimalist endless booru viewer</p>
       </div>
@@ -284,13 +285,13 @@
         <select id="source-select">
           <option value="rule34">r34</option>
           <option value="e621">e621</option>
+          <option value="safebooru">safebooru</option>
         </select>
       </label>
       <label><input id="hide-ai" type="checkbox"><span>Hide AI</span></label>
       <label><input id="hide-extreme" type="checkbox"><span>Hide Extreme Content</span></label>
       <label><input id="natural-aspect" type="checkbox"><span>Show Original Sizes</span></label>
     </div>
-
     <main>
       <div id="initial">no content here… yet… :P</div>
       <div id="gallery"></div>
@@ -298,14 +299,12 @@
       <div id="sentinel"></div>
     </main>
   </div>
-
   <div id="overlay">
     <div id="media-container"></div>
     <div id="overlay-controls"></div>
     <div id="prev" class="nav-btn">&#9668;</div>
     <div id="next" class="nav-btn">&#9658;</div>
   </div>
-
   <script>
     const tagListEl        = document.getElementById('tag-list'),
           inputEl          = document.getElementById('search-input'),
@@ -340,10 +339,6 @@
         source = 'rule34',
         pendingDeletionIndex = null;
 
-    inputEl.addEventListener('blur', () => {
-      tagListEl.scrollTo({ left: 0, behavior: 'smooth' });
-    });
-
     function renderTags(){
       tagListEl.innerHTML = '';
       if (pendingDeletionIndex !== null && (pendingDeletionIndex < 0 || pendingDeletionIndex >= tags.length)) {
@@ -352,74 +347,50 @@
       tags.forEach((t,i)=>{
         const span = document.createElement('span');
         span.className = 'tag-bubble';
-        if (i === pendingDeletionIndex) {
-          span.classList.add('pending-deletion');
-        }
+        if (i === pendingDeletionIndex) span.classList.add('pending-deletion');
         span.tabIndex = 0;
         span.textContent = t;
         span.addEventListener('keydown', e => {
           const bs = Array.from(tagListEl.querySelectorAll('.tag-bubble')),
                 idx = bs.indexOf(span);
-          if (e.key === 'ArrowLeft') {
-            e.preventDefault();
-            if (idx > 0) bs[idx-1].focus();
-          }
-          else if (e.key === 'ArrowRight') {
-            e.preventDefault();
-            if (idx < bs.length - 1) bs[idx+1].focus();
-            else {
-              inputEl.focus();
-              inputEl.setSelectionRange(0,0);
-            }
-          }
+          if (e.key === 'ArrowLeft') { e.preventDefault(); if (idx>0) bs[idx-1].focus(); }
+          else if (e.key === 'ArrowRight') { e.preventDefault(); if (idx<bs.length-1) bs[idx+1].focus(); else { inputEl.focus(); inputEl.setSelectionRange(0,0); } }
           else if (e.key === 'Backspace') {
             e.preventDefault();
             if (pendingDeletionIndex !== idx) {
-              pendingDeletionIndex = idx;
-              renderTags();
+              pendingDeletionIndex = idx; renderTags();
               const bs2 = tagListEl.querySelectorAll('.tag-bubble');
               if (bs2[pendingDeletionIndex]) bs2[pendingDeletionIndex].focus();
             } else {
-              tags.splice(idx,1);
-              pendingDeletionIndex = null;
-              renderTags();
-              inputEl.focus();
+              tags.splice(idx,1); pendingDeletionIndex = null; renderTags(); inputEl.focus();
             }
           }
         });
         const rem = document.createElement('span');
-        rem.className = 'remove-btn';
-        rem.textContent = '×';
+        rem.className = 'remove-btn'; rem.textContent = '×';
         rem.addEventListener('mousedown', e => e.preventDefault());
-        rem.onclick = () => {
-          tags.splice(i,1);
-          pendingDeletionIndex = null;
-          renderTags();
-          inputEl.focus();
-        };
+        rem.onclick = () => { tags.splice(i,1); pendingDeletionIndex = null; renderTags(); inputEl.focus(); };
         span.appendChild(rem);
         tagListEl.appendChild(span);
       });
       tagListEl.appendChild(inputEl);
-      inputEl.placeholder = tags.length ? '' : 'Type tags…';
+      inputEl.placeholder = tags.length ? '' : 'type tags…';
       inputEl.focus();
     }
 
     function addTag(text){
       const t = text.trim();
       if (!t || tags.includes(t)) return;
-      tags.push(t);
-      pendingDeletionIndex = null;
-      renderTags();
+      tags.push(t); pendingDeletionIndex = null; renderTags();
     }
 
+    inputEl.addEventListener('blur', () => {
+      tagListEl.scrollTo({ left: 0, behavior: 'smooth' });
+    });
     inputEl.addEventListener('keydown', e => {
-      if (e.key !== 'Backspace' && pendingDeletionIndex !== null) {
-        pendingDeletionIndex = null;
-        renderTags();
-      }
+      if (e.key !== 'Backspace' && pendingDeletionIndex !== null) { pendingDeletionIndex = null; renderTags(); }
 
-      if (e.key === 'ArrowLeft' && inputEl.selectionStart === 0 && tags.length) {
+      if (e.key === 'ArrowLeft' && inputEl.selectionStart===0 && tags.length) {
         e.preventDefault();
         const bs = tagListEl.querySelectorAll('.tag-bubble');
         bs[bs.length-1].focus();
@@ -429,34 +400,29 @@
       if (e.key === 'Enter') {
         if (inputEl.value.trim()) {
           e.preventDefault();
-          addTag(inputEl.value);
-          inputEl.value = '';
+          addTag(inputEl.value); inputEl.value = '';
         } else {
           e.preventDefault();
-          doSearch();
-          inputEl.blur();
+          doSearch(); inputEl.blur();
         }
       }
       else if (e.key === ' ') {
         e.preventDefault();
-        addTag(inputEl.value);
-        inputEl.value = '';
+        addTag(inputEl.value); inputEl.value = '';
       }
       else if (e.key === 'Backspace' && !inputEl.value) {
         e.preventDefault();
         if (pendingDeletionIndex === null && tags.length) {
-          pendingDeletionIndex = tags.length - 1;
-          renderTags();
+          pendingDeletionIndex = tags.length - 1; renderTags();
         }
         else if (pendingDeletionIndex === tags.length - 1) {
-          tags.splice(pendingDeletionIndex,1);
-          pendingDeletionIndex = null;
-          renderTags();
+          tags.splice(pendingDeletionIndex,1); pendingDeletionIndex = null; renderTags();
         }
       }
     });
 
     tagListEl.addEventListener('click', () => inputEl.focus());
+
     window.addEventListener('DOMContentLoaded', () => {
       const ra = sessionStorage.getItem('hideAi'),
             re = sessionStorage.getItem('hideExtreme'),
@@ -475,9 +441,9 @@
 
     settingsBtn.onclick = e => {
       e.stopPropagation();
-      const o = !settingsMenu.classList.contains('open');
-      settingsMenu.classList.toggle('open', o);
-      settingsBackdrop.style.display = o ? 'block' : 'none';
+      const open = !settingsMenu.classList.contains('open');
+      settingsMenu.classList.toggle('open', open);
+      settingsBackdrop.style.display = open ? 'block' : 'none';
     };
     settingsBackdrop.onclick = () => {
       settingsMenu.classList.remove('open');
@@ -501,17 +467,28 @@
       sessionStorage.setItem('source', source);
     };
 
+    document.addEventListener('dragstart', e => {
+      if (e.target.tagName === 'IMG' || e.target.tagName === 'VIDEO') e.preventDefault();
+    });
+
     function buildUrl(){
       const all = tags.slice();
-      if (hideAi) all.push('-ai_generated','-ai_assisted');
-      if (hideExtreme) all.push('-blood','-feces','-fart','-scat','-gore','-rape','-loli','-shota','-incest','-bestiality');
+      if (hideAi)      all.push('-ai_generated','-ai_assisted');
+      if (hideExtreme) all.push('-blood','-feces','-fart','-fecal_matter','-scat','-diaper','-urine','-urination','-watersports','-vomit','-vomiting','-puke','-gore','-vore','-body_horror','-mutilation','-dismemberment','-decapitation','-corpse','-necrophilia','-zoophilia','-bestiality','-feral','-rape','-non_con','-incest','-loli','-shota','-underage','-nazi');
+
       if (source === 'rule34') {
         const base = 'https://api.rule34.xxx/index.php?page=dapi&s=post&q=index&json=1';
         return base + '&tags=' + all.map(t => encodeURIComponent(t.replace(/\s+/g,'_'))).join('+') + '&pid=' + page;
-      } else {
+      }
+      else if (source === 'e621') {
         const p = page + 1,
               t = all.map(t => encodeURIComponent(t.replace(/\s+/g,'_'))).join('+');
         return `https://e621.net/posts.json?limit=100&page=${p}` + (t ? `&tags=${t}` : '');
+      }
+      else if (source === 'safebooru') {
+        const base = 'https://safebooru.org/index.php?page=dapi&s=post&q=index';
+        const t    = all.map(t => encodeURIComponent(t.replace(/\s+/g,'_'))).join('+');
+        return `${base}&tags=${t}&limit=100&pid=${page}`;
       }
     }
 
@@ -519,54 +496,106 @@
       if (!searchPerformed || isLoading) return;
       isLoading = true;
       if (page === 0) loadingBar.style.width = '100%';
+
       try {
-        const url   = buildUrl(),
-              fUrl  = source === 'rule34' ? 'https://corsproxy.io/?' + encodeURIComponent(url) : url,
-              opts  = source === 'e621' ? { headers:{ 'User-Agent':'grbr.xyz' } } : {};
+        const url  = buildUrl(),
+              fUrl = (source === 'rule34' || source === 'safebooru')
+                       ? 'https://corsproxy.io/?url=' + encodeURIComponent(url)
+                       : url,
+              opts = source === 'e621'
+                       ? { headers:{ 'User-Agent':'grbr.xyz' } }
+                       : {};
         const res = await fetch(fUrl, opts);
-        if (!res.headers.get('content-type')?.includes('application/json')) throw 0;
-        const data  = await res.json(),
-              batch = source === 'rule34' ? data : data.posts;
-        if (page === 0 && (!batch || !batch.length)) {
-          errorBox.innerHTML = 'hmm.. something went wrong… <span id="retry" style="text-decoration:underline;cursor:pointer;">Retry?</span>';
-          errorBox.style.display = 'block';
-          document.getElementById('retry').onclick = doSearch;
+        if (source === 'safebooru') {
+          const xmlText = await res.text();
+          const parser  = new DOMParser();
+          const xmlDoc  = parser.parseFromString(xmlText, 'text/xml');
+          const posts   = Array.from(xmlDoc.querySelectorAll('post'));
+
+          if (page === 0 && posts.length === 0) {
+            errorBox.innerHTML = 'hmm... something went wrong… <span id="retry" style="text-decoration:underline;cursor:pointer;">Retry?</span>';
+            errorBox.style.display = 'block';
+            document.getElementById('retry').onclick = doSearch;
+          } else {
+            posts.forEach(post => {
+              const id       = post.getAttribute('id'),
+                    file     = post.getAttribute('file_url'),
+                    preview  = post.getAttribute('preview_url'),
+                    sampleHd = post.getAttribute('sample_url'),
+                    sample   = /\.gif$/i.test(file) ? file : (sampleHd || preview),
+                    link     = `https://safebooru.org/index.php?page=post&s=view&id=${id}`;
+
+              items.push({ sample, file, link });
+              const idx = items.length - 1;
+
+              if (/\.(webm|mp4)(?:$|\?)/i.test(file)) {
+                const w = document.createElement('div');
+                w.className = 'thumb-video-wrapper';
+                const im = document.createElement('img');
+                im.src     = sample; im.loading = 'lazy';
+                im.className = 'thumb-video';
+                im.onload = () => { im.style.opacity = '1'; w.classList.add('loaded'); };
+                w.appendChild(im);
+                w.onclick = () => openOverlay(idx);
+                gallery.appendChild(w);
+              } else {
+                const im = document.createElement('img');
+                im.src     = sample;
+                im.loading = 'lazy';
+                im.className = 'thumb-img';
+                im.onload  = () => im.style.opacity = '1';
+                im.onclick = () => openOverlay(idx);
+                gallery.appendChild(im);
+              }
+            });
+            page++;
+          }
         } else {
-          batch.forEach(post => {
-            let sample, file, link;
-            if (source === 'rule34') {
-              sample = post.sample_url; file = post.file_url;
-              link   = `https://rule34.xxx/index.php?page=post&s=view&id=${post.id}`;
-            } else {
-              if (!post.sample?.url) return;
-              sample = post.sample.url; file = post.file.url;
-              link   = `https://e621.net/posts/${post.id}`;
-            }
-            items.push({ sample, file, link });
-            const idx = items.length - 1;
-            if (/\.(webm|mp4)(?:$|\?)/i.test(file)) {
-              const w = document.createElement('div');
-              w.className = 'thumb-video-wrapper';
-              const im = document.createElement('img');
-              im.src     = sample;
-              im.loading = 'lazy';
-              im.className = 'thumb-video';
-              im.onload  = () => { im.style.opacity='1'; w.classList.add('loaded'); };
-              w.appendChild(im);
-              w.onclick = () => openOverlay(idx);
-              gallery.appendChild(w);
-            } else {
-              const im = document.createElement('img');
-              im.src = sample; im.loading = 'lazy'; im.className = 'thumb-img';
-              im.onload = () => im.style.opacity = '1';
-              im.onclick = () => openOverlay(idx);
-              gallery.appendChild(im);
-            }
-          });
-          page++;
+          if (!res.headers.get('content-type')?.includes('application/json')) throw 0;
+          const data  = await res.json(),
+                batch = source === 'rule34' ? data : data.posts;
+
+          if (page === 0 && (!batch || !batch.length)) {
+            errorBox.innerHTML = 'hmm... something went wrong… <span id="retry" style="text-decoration:underline;cursor:pointer;">Retry?</span>';
+            errorBox.style.display = 'block';
+            document.getElementById('retry').onclick = doSearch;
+          } else {
+            batch.forEach(post => {
+              let sample, file, link;
+              if (source === 'rule34') {
+                sample = post.sample_url; file = post.file_url;
+                link   = `https://rule34.xxx/index.php?page=post&s=view&id=${post.id}`;
+              } else {
+                if (!post.sample?.url) return;
+                sample = post.sample.url; file = post.file.url;
+                link   = `https://e621.net/posts/${post.id}`;
+              }
+              items.push({ sample, file, link });
+              const idx = items.length - 1;
+              if (/\.(webm|mp4)(?:$|\?)/i.test(file)) {
+                const w = document.createElement('div');
+                w.className = 'thumb-video-wrapper';
+                const im = document.createElement('img');
+                im.src     = sample; im.loading = 'lazy';
+                im.className = 'thumb-video';
+                im.onload  = () => { im.style.opacity='1'; w.classList.add('loaded'); };
+                w.appendChild(im);
+                w.onclick = () => openOverlay(idx);
+                gallery.appendChild(w);
+              } else {
+                const im = document.createElement('img');
+                im.src     = sample; im.loading = 'lazy';
+                im.className = 'thumb-img';
+                im.onload  = () => im.style.opacity = '1';
+                im.onclick = () => openOverlay(idx);
+                gallery.appendChild(im);
+              }
+            });
+            page++;
+          }
         }
       } catch {
-        errorBox.innerHTML = 'hmm.. something went wrong… <span id="retry" style="text-decoration:underline;cursor:pointer;">Retry?</span>';
+        errorBox.innerHTML = 'hmm... something went wrong… <span id="retry" style="text-decoration:underline;cursor:pointer;">Retry?</span>';
         errorBox.style.display = 'block';
         document.getElementById('retry').onclick = doSearch;
       } finally {
@@ -576,15 +605,14 @@
     }
 
     function openOverlay(i){
-      currentIndex   = i;
+      currentIndex = i;
       mediaContainer.innerHTML = '';
       overlayControls.innerHTML = '';
       const it = items[i];
       if (/\.(webm|mp4)(?:$|\?)/i.test(it.file)) {
         const v = document.createElement('video');
         v.controls = v.autoplay = v.playsInline = true;
-        v.preload = 'auto';
-        v.src = it.file;
+        v.preload = 'auto'; v.src = it.file;
         mediaContainer.appendChild(v);
       } else {
         const img = document.createElement('img');
@@ -602,11 +630,11 @@
       overlay.classList.add('open');
     }
 
+    overlayControls.addEventListener('click', e => e.stopPropagation());
     function closeOverlay(){
       mediaContainer.querySelectorAll('video').forEach(v => { v.pause(); v.currentTime = 0; });
       overlay.classList.remove('open');
     }
-
     overlay.onclick = closeOverlay;
     mediaContainer.onclick = e => e.stopPropagation();
     prevBtn.onclick = e => { e.stopPropagation(); if (currentIndex > 0) openOverlay(currentIndex - 1); };
@@ -621,6 +649,7 @@
     const sourceLabel = {
       rule34: 'r34',
       e621:   'e621',
+      safebooru: 'safe'
     };
 
     function doSearch(){
@@ -628,7 +657,7 @@
       page = 0; items = []; gallery.innerHTML = ''; initialMsg.style.display = 'none'; errorBox.style.display = 'none';
       searchPerformed = true;
       document.title = tags.length
-        ? `grbr.xyz - ${sourceLabel[source] || source} - ${tags.join(', ')}`
+        ? `grbr.xyz - ${sourceLabel[source]} - ${tags.join(', ')}`
         : 'grbr.xyz - endless booru viewer';
       fetchBatch();
     }
