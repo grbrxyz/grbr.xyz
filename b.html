@@ -1,0 +1,1420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>grbr.xyz - endless booru viewer</title>
+  <link rel="icon" href="https://em-content.zobj.net/source/twitter/408/flag-palestinian-territories_1f1f5-1f1f8.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', sans-serif;
+    }
+    
+    html {
+      font-size: 200%;
+      height: 100%;
+      width: 100%;
+      -webkit-text-size-adjust: 100%;
+    }
+    
+    body {
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
+      overflow: hidden;
+    }
+    
+    *:not(input) {
+      user-select: none;
+    }
+    
+    img, video {
+      -webkit-user-drag: none;
+      user-select: none;
+    }
+
+    .liquid-glass {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(20px) saturate(150%);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .liquid-glass::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(
+        circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+        rgba(255, 255, 255, 0.15) 0%,
+        rgba(255, 255, 255, 0.05) 30%,
+        transparent 70%
+      );
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+    
+    .liquid-glass:hover::before {
+      opacity: 1;
+    }
+
+    #site-container {
+      background: linear-gradient(135deg, #0a0a0a 0%, #1e1e1e 50%, #0f0f0f 100%);
+      color: #e8e8e8;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+      position: relative;
+    }
+    
+    #site-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image: 
+        radial-gradient(circle at 20% 20%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(255, 119, 198, 0.2) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, rgba(120, 200, 255, 0.1) 0%, transparent 50%);
+      animation: backgroundShift 20s ease-in-out infinite;
+      pointer-events: none;
+    }
+    
+    @keyframes backgroundShift {
+      0%, 100% { opacity: 0.3; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.1); }
+    }
+    
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4rem;
+      pointer-events: none;
+      z-index: 100;
+      padding: 1rem;
+    }
+    
+    #search-container {
+      pointer-events: all;
+      position: relative;
+      width: 100%;
+      max-width: 24rem;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    
+    #search-bar {
+      flex: 1;
+      border-radius: 1.75rem;
+      padding: 0.875rem 1.25rem;
+      min-height: 3.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transform: translateZ(0);
+    }
+    
+    #search-bar:focus-within {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.3);
+      box-shadow: 
+        0 12px 40px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.2),
+        0 0 0 1px rgba(120, 119, 198, 0.5);
+      transform: translateY(-1px) scale(1.01);
+    }
+    
+    .tag-container {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      overflow-x: auto;
+      scrollbar-width: none;
+      padding: 0.25rem 0;
+    }
+    
+    .tag-container::-webkit-scrollbar {
+      display: none;
+    }
+    
+    .tag-input-wrapper {
+      position: relative;
+      min-width: 6rem;
+      flex: 1;
+    }
+    
+    .tag-container input {
+      border: none;
+      background: transparent;
+      color: #e8e8e8;
+      font-size: 1rem;
+      padding: 0.5rem 0.25rem;
+      outline: none;
+      width: 100%;
+      font-weight: 400;
+      position: relative;
+      z-index: 2;
+    }
+    
+    .tag-container input::placeholder {
+      color: rgba(255, 255, 255, 0.5);
+      font-weight: 300;
+    }
+    
+    .tag-chip {
+      display: inline-flex;
+      align-items: center;
+      background: rgba(120, 119, 198, 0.8);
+      color: #fff;
+      padding: 0.375rem 0.75rem;
+      border-radius: 1.25rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      line-height: 1.4;
+      flex-shrink: 0;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 
+        0 2px 8px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    
+    .tag-chip:hover {
+      background: rgba(120, 119, 198, 0.9);
+      transform: translateY(-1px);
+      box-shadow: 
+        0 4px 12px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    }
+    
+    .tag-chip.pending-deletion {
+      background: rgba(220, 80, 80, 0.9);
+      border-color: rgba(255, 120, 120, 0.5);
+      animation: pulseRed 0.6s ease-in-out infinite;
+      box-shadow: 
+        0 4px 12px rgba(220, 80, 80, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    }
+    
+    @keyframes pulseRed {
+      0%, 100% { 
+        opacity: 1; 
+        box-shadow: 
+          0 4px 12px rgba(220, 80, 80, 0.4),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      }
+      50% { 
+        opacity: 0.8; 
+        box-shadow: 
+          0 6px 16px rgba(220, 80, 80, 0.6),
+          inset 0 1px 0 rgba(255, 255, 255, 0.3);
+      }
+    }
+    
+    .tag-chip .remove-icon {
+      margin-left: 0.5rem;
+      font-size: 0.75rem;
+      opacity: 0.8;
+      transition: opacity 0.2s ease;
+    }
+    
+    .tag-chip:hover .remove-icon {
+      opacity: 1;
+    }
+    
+    .control-btn {
+      width: 3.5rem;
+      height: 3.5rem;
+      border: none;
+      border-radius: 1.75rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .control-btn img {
+      width: 1.375rem;
+      height: 1.375rem;
+      filter: invert(1);
+      opacity: 0.9;
+      transition: all 0.2s ease;
+      z-index: 2;
+      position: relative;
+    }
+    
+    .control-btn:hover {
+      transform: translateY(-2px) scale(1.05);
+    }
+    
+    .control-btn:active {
+      transform: translateY(0) scale(0.95);
+    }
+    
+    #settings-btn {
+      background: rgba(255, 255, 255, 0.06);
+    }
+    
+    #search-btn {
+      background: linear-gradient(135deg, #7877c6 0%, #9f7ce6 100%);
+      box-shadow: 
+        0 4px 16px rgba(120, 119, 198, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    }
+    
+    #search-btn:hover {
+      box-shadow: 
+        0 6px 20px rgba(120, 119, 198, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    }
+    
+    #settings-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(8px);
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      z-index: 240;
+    }
+    
+    #settings-backdrop.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    #settings-panel {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.9);
+      width: 90%;
+      max-width: 22rem;
+      padding: 2rem;
+      border-radius: 1.5rem;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 250;
+    }
+    
+    #settings-panel.active {
+      opacity: 1;
+      visibility: visible;
+      transform: translate(-50%, -50%) scale(1);
+    }
+    
+    .settings-header {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+    
+    .settings-header h1 {
+      font-size: 1.875rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #C8A2C8, #a8c2ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.25rem;
+    }
+    
+    .settings-header .version {
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.6);
+      text-decoration: none;
+    }
+    
+    .settings-header .subtitle {
+      font-size: 1rem;
+      color: rgba(255, 255, 255, 0.7);
+      font-weight: 300;
+      margin-top: 0.5rem;
+    }
+    
+    .setting-group {
+      margin-bottom: 1rem;
+    }
+    
+    .setting-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      border-radius: 0.875rem;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      margin-bottom: 0.5rem;
+      transition: all 0.2s ease;
+    }
+    
+    .setting-row:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+    
+    .setting-row label {
+      flex: 1;
+      font-size: 0.95rem;
+      font-weight: 400;
+      color: #e8e8e8;
+      cursor: pointer;
+    }
+    
+    .setting-row input[type="checkbox"] {
+      width: 1.25rem;
+      height: 1.25rem;
+      accent-color: #7877c6;
+      cursor: pointer;
+    }
+    
+    .setting-row select {
+      flex: 1;
+      border: none;
+      border-radius: 0.5rem;
+      padding: 0.625rem 0.875rem;
+      background: rgba(40, 40, 40, 0.9);
+      color: #e8e8e8;
+      font-size: 0.95rem;
+      cursor: pointer;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.2s ease;
+    }
+    
+    .setting-row select:focus {
+      outline: none;
+      background: rgba(50, 50, 50, 0.9);
+      border-color: rgba(120, 119, 198, 0.5);
+    }
+    
+    .setting-row select option {
+      background: rgba(40, 40, 40, 0.95);
+      color: #e8e8e8;
+      padding: 0.5rem;
+    }
+    
+    #progress-indicator {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 2px;
+      background: linear-gradient(90deg, #7877c6, #9f7ce6, #7877c6);
+      background-size: 200% 100%;
+      width: 0;
+      transition: width 0.3s ease;
+      z-index: 150;
+      animation: shimmer 2s infinite;
+    }
+    
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    
+    main {
+      flex: 1;
+      position: relative;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-top: 6rem;
+      padding-bottom: 2rem;
+    }
+    
+    #welcome-state {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: rgba(255, 255, 255, 0.4);
+      text-align: center;
+      z-index: 1;
+    }
+    
+    #welcome-state .message {
+      font-size: 1.125rem;
+      font-weight: 300;
+    }
+    
+    #image-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1rem;
+      padding: 1.5rem;
+      align-items:center; justify-content:center;
+    }
+    
+    #image-grid.natural-sizing {
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    }
+    
+    .media-card, .thumb-video-wrapper {
+      position: relative;
+      border-radius: 1rem;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      align-items:center; justify-content:center;
+    }
+    
+    .media-card::before, .thumb-video-wrapper::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, 
+        rgba(255, 255, 255, 0.1) 0%,
+        transparent 50%,
+        rgba(255, 255, 255, 0.05) 100%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+      z-index: 2;
+    }
+    
+    .media-card:hover, .thumb-video-wrapper:hover {
+      transform: translateY(-4px) scale(1.02);
+      box-shadow: 
+        0 16px 40px rgba(0, 0, 0, 0.4),
+        0 8px 20px rgba(120, 119, 198, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+    
+    .media-card:hover::before, .thumb-video-wrapper:hover::before {
+      opacity: 1;
+    }
+    
+    .media-thumbnail, .thumb-img, .thumb-video {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      display: block;
+    }
+    
+    #image-grid.natural-sizing .media-thumbnail,
+    #image-grid.natural-sizing .thumb-img,
+    #image-grid.natural-sizing .thumb-video {
+      aspect-ratio: auto;
+      object-fit: contain;
+      height: auto;
+    }
+    
+    .media-thumbnail.loaded, .thumb-img, .thumb-video {
+      opacity: 1;
+    }
+    
+    .thumb-video-wrapper::after {
+      content: "▶";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 1.5rem;
+      color: rgba(255, 255, 255, 0.8);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+      z-index: 3;
+      font-family: "Segoe UI Symbol", Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    
+    .thumb-video-wrapper.loaded::after {
+      opacity: 1;
+    }
+
+    #status-message {
+      text-align: center;
+      padding: 2rem;
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 1rem;
+      display: none;
+    }
+    
+    #status-message .retry-link {
+      color: #7877c6;
+      text-decoration: underline;
+      cursor: pointer;
+      transition: color 0.2s ease;
+    }
+    
+    #status-message .retry-link:hover {
+      color: #9f7ce6;
+    }
+    
+    #media-viewer {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.95);
+      backdrop-filter: blur(12px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    
+    #media-viewer.active {
+      display: flex;
+      opacity: 1;
+    }
+    
+    #viewer-content {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      max-width: 100%;
+      max-height: 100%;
+      position: relative;
+    }
+    
+    #viewer-content img,
+    #viewer-content video {
+      max-width: calc(100vw - 4rem);
+      max-height: calc(100vh - 8rem);
+      object-fit: contain;
+      border-radius: 0.5rem;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+    }
+    
+    .viewer-nav {
+      position: fixed;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3rem;
+      height: 3rem;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      color: #fff;
+      z-index: 1010;
+      transition: all 0.3s ease;
+      opacity: 0.7;
+    }
+    
+    .viewer-nav:hover {
+      opacity: 1;
+      transform: translateY(-50%) scale(1.1);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    }
+    
+    .viewer-nav:active {
+      transform: translateY(-50%) scale(0.95);
+    }
+    
+    #prev-nav {
+      left: 2rem;
+    }
+    
+    #next-nav {
+      right: 2rem;
+    }
+    
+    #viewer-controls {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      display: flex;
+      gap: 0.75rem;
+      z-index: 1015;
+    }
+    
+    .viewer-control {
+      width: 2.5rem;
+      height: 2.5rem;
+      border-radius: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      opacity: 0.8;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .viewer-control:hover {
+      opacity: 1;
+      transform: translateY(-2px) scale(1.05);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    }
+    
+    .viewer-control img {
+      width: 1.25rem;
+      height: 1.25rem;
+      filter: invert(1);
+    }
+    
+    #close-viewer {
+      position: fixed;
+      top: 2rem;
+      right: 2rem;
+      width: 2.5rem;
+      height: 2.5rem;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.125rem;
+      color: #fff;
+      z-index: 1020;
+      opacity: 0.8;
+      transition: all 0.3s ease;
+    }
+    
+    #close-viewer:hover {
+      opacity: 1;
+      transform: scale(1.1);
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    @media (max-width: 640px) {
+      html {
+        font-size: 100%;
+      }
+      
+      header {
+        padding: 0.75rem;
+      }
+      
+      #search-container {
+        max-width: none;
+        gap: 0.5rem;
+      }
+      
+      #search-bar {
+        padding: 0.75rem 1rem;
+        min-height: 3rem;
+      }
+      
+      .control-btn {
+        width: 3rem;
+        height: 3rem;
+      }
+      
+      .control-btn img {
+        width: 1.25rem;
+        height: 1.25rem;
+      }
+      
+      #image-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 0.75rem;
+        padding: 1rem;
+      }
+      
+      .viewer-nav {
+        width: 2.5rem;
+        height: 2.5rem;
+        font-size: 1rem;
+      }
+      
+      #prev-nav {
+        left: 1rem;
+      }
+      
+      #next-nav {
+        right: 1rem;
+      }
+      
+      #viewer-controls {
+        bottom: 1rem;
+        right: 1rem;
+        gap: 0.5rem;
+      }
+      
+      .viewer-control {
+        width: 2.25rem;
+        height: 2.25rem;
+      }
+      
+      .viewer-control img {
+        width: 1.125rem;
+        height: 1.125rem;
+      }
+      
+      #close-viewer {
+        top: 1rem;
+        right: 1rem;
+        width: 2.25rem;
+        height: 2.25rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="site-container">
+    <div id="progress-indicator"></div>
+    
+    <header>
+      <div id="search-container">
+        <div id="search-bar" class="liquid-glass">
+          <div class="tag-container" id="tag-container" tabindex="0">
+            <div class="tag-input-wrapper">
+              <input id="search-input" type="text" placeholder="enter tags to search…" autocomplete="off" spellcheck="false">
+            </div>
+          </div>
+        </div>
+        
+        <button id="settings-btn" class="control-btn liquid-glass" aria-label="Settings">
+          <img src="https://www.svgrepo.com/show/422495/gear-setting-settings.svg" alt="Settings">
+        </button>
+        
+        <button id="search-btn" class="control-btn" aria-label="Search">
+          <img src="https://www.svgrepo.com/show/479907/search.svg" alt="Search">
+        </button>
+      </div>
+    </header>
+    
+    <div id="settings-backdrop"></div>
+    <div id="settings-panel" class="liquid-glass">
+      <div class="settings-header">
+        <h1>grbr.xyz</h1>
+        <a href="https://github.com/grbrxyz/grbr.xyz" target="_blank" class="version">v2 BETA</a>
+        <p class="subtitle">minimalist endless booru viewer</p>
+      </div>
+      
+      <div class="setting-group">
+        <div class="setting-row">
+          <label for="source-selector">Source</label>
+          <select id="source-selector">
+            <option value="rule34">r34 (offline)</option>
+            <option value="e621">e621</option>
+            <option value="safebooru">safebooru</option>
+          </select>
+        </div>
+        
+        <div class="setting-row">
+          <label for="ai-filter">Hide AI Content</label>
+          <input id="ai-filter" type="checkbox">
+        </div>
+        
+        <div class="setting-row">
+          <label for="content-filter">Hide Extreme Content</label>
+          <input id="content-filter" type="checkbox">
+        </div>
+        
+        <div class="setting-row">
+          <label for="aspect-toggle">Natural Aspect Ratios</label>
+          <input id="aspect-toggle" type="checkbox">
+        </div>
+      </div>
+    </div>
+    
+    <main>
+      <div id="welcome-state">
+        <div class="message">no content here... yet... :P</div>
+      </div>
+      
+      <div id="image-grid"></div>
+      <div id="status-message"></div>
+      <div id="load-trigger"></div>
+    </main>
+  </div>
+  
+  <div id="media-viewer">
+    <button id="close-viewer" class="liquid-glass">✕</button>
+    <div id="viewer-content"></div>
+    <div id="viewer-controls"></div>
+    <button id="prev-nav" class="viewer-nav liquid-glass">‹</button>
+    <button id="next-nav" class="viewer-nav liquid-glass">›</button>
+  </div>
+
+  <script>
+    const tagContainer = document.getElementById('tag-container'),
+          searchInput = document.getElementById('search-input'),
+          searchBtn = document.getElementById('search-btn'),
+          settingsBtn = document.getElementById('settings-btn'),
+          settingsPanel = document.getElementById('settings-panel'),
+          settingsBackdrop = document.getElementById('settings-backdrop'),
+          aiFilter = document.getElementById('ai-filter'),
+          contentFilter = document.getElementById('content-filter'),
+          aspectToggle = document.getElementById('aspect-toggle'),
+          sourceSelector = document.getElementById('source-selector'),
+          imageGrid = document.getElementById('image-grid'),
+          welcomeState = document.getElementById('welcome-state'),
+          statusMessage = document.getElementById('status-message'),
+          progressIndicator = document.getElementById('progress-indicator'),
+          loadTrigger = document.getElementById('load-trigger'),
+          mediaViewer = document.getElementById('media-viewer'),
+          viewerContent = document.getElementById('viewer-content'),
+          viewerControls = document.getElementById('viewer-controls'),
+          closeViewer = document.getElementById('close-viewer'),
+          prevNav = document.getElementById('prev-nav'),
+          nextNav = document.getElementById('next-nav');
+
+    let tags = [],
+        page = 0,
+        isLoading = false,
+        searchPerformed = false,
+        items = [],
+        currentIndex = 0,
+        hideAi = true,
+        hideExtreme = false,
+        naturalAspect = false,
+        source = 'rule34',
+        pendingDeletionIndex = null;
+
+    function setupCursorTracking() {
+      const glassElements = document.querySelectorAll('.liquid-glass');
+      
+      glassElements.forEach(element => {
+        element.addEventListener('mousemove', (e) => {
+          const rect = element.getBoundingClientRect();
+          const x = ((e.clientX - rect.left) / rect.width) * 100;
+          const y = ((e.clientY - rect.top) / rect.height) * 100;
+          
+          element.style.setProperty('--mouse-x', `${x}%`);
+          element.style.setProperty('--mouse-y', `${y}%`);
+        });
+      });
+    }
+
+    function renderTags() {
+      const inputWrapper = tagContainer.querySelector('.tag-input-wrapper');
+      tagContainer.innerHTML = '';
+      
+      if (pendingDeletionIndex !== null && (pendingDeletionIndex < 0 || pendingDeletionIndex >= tags.length)) {
+        pendingDeletionIndex = null;
+      }
+
+      tags.forEach((tag, index) => {
+        const chip = document.createElement('span');
+        chip.className = 'tag-chip';
+        chip.tabIndex = 0;
+        chip.textContent = tag;
+        
+        if (index === pendingDeletionIndex) {
+          chip.classList.add('pending-deletion');
+        }
+        
+        chip.addEventListener('keydown', (e) => handleTagChipNavigation(e, chip, index));
+        
+        const removeIcon = document.createElement('span');
+        removeIcon.className = 'remove-icon';
+        removeIcon.textContent = '×';
+        removeIcon.addEventListener('mousedown', (e) => e.preventDefault());
+        removeIcon.onclick = () => removeTagAtIndex(index);
+        
+        chip.appendChild(removeIcon);
+        tagContainer.appendChild(chip);
+      });
+
+      tagContainer.appendChild(inputWrapper);
+      updateInputPlaceholder();
+      searchInput.focus();
+    }
+
+    function handleTagChipNavigation(e, chip, index) {
+      const allChips = Array.from(tagContainer.querySelectorAll('.tag-chip'));
+      const currentPos = allChips.indexOf(chip);
+
+      switch (e.key) {
+        case 'ArrowLeft':
+          e.preventDefault();
+          if (currentPos > 0) allChips[currentPos - 1].focus();
+          break;
+          
+        case 'ArrowRight':
+          e.preventDefault();
+          if (currentPos < allChips.length - 1) {
+            allChips[currentPos + 1].focus();
+          } else {
+            searchInput.focus();
+            searchInput.setSelectionRange(0, 0);
+          }
+          break;
+          
+        case 'Backspace':
+          e.preventDefault();
+          handleTagRemoval(index);
+          break;
+      }
+    }
+
+    function handleTagRemoval(index) {
+      if (pendingDeletionIndex !== index) {
+        pendingDeletionIndex = index;
+        renderTags();
+        const updatedChips = tagContainer.querySelectorAll('.tag-chip');
+        if (updatedChips[pendingDeletionIndex]) {
+          updatedChips[pendingDeletionIndex].focus();
+        }
+      } else {
+        removeTagAtIndex(index);
+      }
+    }
+
+    function addTag(text) {
+      const cleanTag = text.trim();
+      if (!cleanTag || tags.includes(cleanTag)) return;
+      
+      tags.push(cleanTag);
+      pendingDeletionIndex = null;
+      renderTags();
+    }
+
+    function removeTagAtIndex(index) {
+      tags.splice(index, 1);
+      pendingDeletionIndex = null;
+      renderTags();
+      searchInput.focus();
+    }
+
+    function updateInputPlaceholder() {
+      searchInput.placeholder = tags.length ? '' : 'enter tags to search…';
+    }
+
+    searchInput.addEventListener('blur', () => {
+      tagContainer.scrollTo({ left: 0, behavior: 'smooth' });
+    });
+
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key !== 'Backspace' && pendingDeletionIndex !== null) {
+        pendingDeletionIndex = null;
+        renderTags();
+      }
+
+      switch (e.key) {
+        case 'ArrowLeft':
+          if (searchInput.selectionStart === 0 && tags.length) {
+            e.preventDefault();
+            const chips = tagContainer.querySelectorAll('.tag-chip');
+            chips[chips.length - 1].focus();
+          }
+          break;
+          
+        case 'Enter':
+          e.preventDefault();
+          if (searchInput.value.trim()) {
+            addTag(searchInput.value);
+            searchInput.value = '';
+          } else {
+            doSearch();
+            searchInput.blur();
+          }
+          break;
+          
+        case ' ':
+          e.preventDefault();
+          if (searchInput.value.trim()) {
+            addTag(searchInput.value);
+            searchInput.value = '';
+          }
+          break;
+          
+        case 'Backspace':
+          if (!searchInput.value) {
+            e.preventDefault();
+            if (pendingDeletionIndex === null && tags.length) {
+              pendingDeletionIndex = tags.length - 1;
+              renderTags();
+            } else if (pendingDeletionIndex === tags.length - 1) {
+              removeTagAtIndex(pendingDeletionIndex);
+            }
+          }
+          break;
+      }
+    });
+
+    tagContainer.addEventListener('click', () => searchInput.focus());
+
+    function loadSettings() {
+      const storedHideAi = sessionStorage.getItem('hideAi');
+      const storedHideExtreme = sessionStorage.getItem('hideExtreme');
+      const storedNaturalAspect = sessionStorage.getItem('naturalAspect');
+      const storedSource = sessionStorage.getItem('source');
+      
+      hideAi = storedHideAi === null ? true : storedHideAi === 'true';
+      hideExtreme = storedHideExtreme === 'true';
+      naturalAspect = storedNaturalAspect === 'true';
+      source = storedSource || 'rule34';
+      
+      aiFilter.checked = hideAi;
+      contentFilter.checked = hideExtreme;
+      aspectToggle.checked = naturalAspect;
+      sourceSelector.value = source;
+      
+      imageGrid.classList.toggle('natural-sizing', naturalAspect);
+    }
+
+    settingsBtn.onclick = (e) => {
+      e.stopPropagation();
+      const isActive = settingsPanel.classList.contains('active');
+      
+      if (isActive) {
+        settingsPanel.classList.remove('active');
+        settingsBackdrop.classList.remove('active');
+      } else {
+        settingsPanel.classList.add('active');
+        settingsBackdrop.classList.add('active');
+      }
+    };
+
+    settingsBackdrop.onclick = () => {
+      settingsPanel.classList.remove('active');
+      settingsBackdrop.classList.remove('active');
+    };
+
+    aiFilter.onchange = () => {
+      hideAi = aiFilter.checked;
+      sessionStorage.setItem('hideAi', hideAi);
+    };
+
+    contentFilter.onchange = () => {
+      hideExtreme = contentFilter.checked;
+      sessionStorage.setItem('hideExtreme', hideExtreme);
+    };
+
+    aspectToggle.onchange = () => {
+      naturalAspect = aspectToggle.checked;
+      imageGrid.classList.toggle('natural-sizing', naturalAspect);
+      sessionStorage.setItem('naturalAspect', naturalAspect);
+    };
+
+    sourceSelector.onchange = () => {
+      source = sourceSelector.value;
+      sessionStorage.setItem('source', source);
+    };
+
+    function buildUrl() {
+      const allTags = tags.slice();
+      
+      if (hideAi) {
+        allTags.push('-ai_generated', '-ai_assisted');
+      }
+      
+      if (hideExtreme) {
+        allTags.push(
+          '-blood', '-feces', '-fart', '-fecal_matter', '-scat',
+          '-diaper', '-urine', '-urination', '-watersports', '-vomit',
+          '-vomiting', '-puke', '-gore', '-vore', '-body_horror',
+          '-mutilation', '-dismemberment', '-decapitation', '-corpse',
+          '-necrophilia', '-zoophilia', '-bestiality', '-feral',
+          '-rape', '-non_con', '-incest', '-loli', '-shota',
+          '-underage', '-nazi'
+        );
+      }
+
+      const encodedTags = allTags.map(t => encodeURIComponent(t.replace(/\s+/g, '_'))).join('+');
+
+      if (source === 'rule34') {
+        return `https://api.rule34.xxx/index.php?page=dapi&s=post&q=index&json=1&tags=${encodedTags}&pid=${page}`;
+      } else if (source === 'e621') {
+        const pageNum = page + 1;
+        return `https://e621.net/posts.json?limit=100&page=${pageNum}` + (encodedTags ? `&tags=${encodedTags}` : '');
+      } else if (source === 'safebooru') {
+        return `https://safebooru.org/index.php?page=dapi&s=post&q=index&tags=${encodedTags}&limit=100&pid=${page}`;
+      }
+    }
+
+    async function fetchBatch() {
+      if (!searchPerformed || isLoading) return;
+      
+      isLoading = true;
+      if (page === 0) progressIndicator.style.width = '100%';
+
+      try {
+        const apiUrl = buildUrl();
+        const needsProxy = source === 'rule34' || source === 'safebooru';
+        const requestUrl = needsProxy ? `https://corsproxy.io/?url=${encodeURIComponent(apiUrl)}` : apiUrl;
+        const options = source === 'e621' ? { headers: { 'User-Agent': 'grbr.xyz/2.1.0' } } : {};
+        
+        const response = await fetch(requestUrl, options);
+        
+        if (source === 'safebooru') {
+          await processSafebooruResponse(response);
+        } else {
+          await processJsonResponse(response);
+        }
+        
+      } catch (error) {
+        displayError();
+      } finally {
+        isLoading = false;
+        progressIndicator.style.width = '0';
+      }
+    }
+
+    async function processSafebooruResponse(response) {
+      const xmlText = await response.text();
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
+      const posts = Array.from(xmlDoc.querySelectorAll('post'));
+
+      if (page === 0 && posts.length === 0) {
+        displayError();
+        return;
+      }
+
+      posts.forEach(post => {
+        const id = post.getAttribute('id');
+        const file = post.getAttribute('file_url');
+        const preview = post.getAttribute('preview_url');
+        const sampleHd = post.getAttribute('sample_url');
+        const sample = /\.gif$/i.test(file) ? file : (sampleHd || preview);
+        const link = `https://safebooru.org/index.php?page=post&s=view&id=${id}`;
+
+        addMediaToGrid({ sample, file, link });
+      });
+      
+      page++;
+    }
+
+    async function processJsonResponse(response) {
+      if (!response.headers.get('content-type')?.includes('application/json')) {
+        throw new Error('Invalid response format');
+      }
+      
+      const data = await response.json();
+      const posts = source === 'rule34' ? data : data.posts;
+
+      if (page === 0 && (!posts || !posts.length)) {
+        displayError();
+        return;
+      }
+
+      posts.forEach(post => {
+        let sample, file, link;
+        
+        if (source === 'rule34') {
+          sample = post.sample_url;
+          file = post.file_url;
+          link = `https://rule34.xxx/index.php?page=post&s=view&id=${post.id}`;
+        } else {
+          if (!post.sample?.url) return;
+          sample = post.sample.url;
+          file = post.file.url;
+          link = `https://e621.net/posts/${post.id}`;
+        }
+        
+        addMediaToGrid({ sample, file, link });
+      });
+      
+      page++;
+    }
+
+    function addMediaToGrid(mediaData) {
+      items.push(mediaData);
+      const index = items.length - 1;
+      const isVideo = /\.(webm|mp4)(?:$|\?)/i.test(mediaData.file);
+      
+      if (isVideo) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'thumb-video-wrapper';
+        
+        const img = document.createElement('img');
+        img.src = mediaData.sample;
+        img.loading = 'lazy';
+        img.className = 'thumb-video';
+        img.onload = () => {
+          img.style.opacity = '1';
+          wrapper.classList.add('loaded');
+        };
+        
+        wrapper.appendChild(img);
+        wrapper.onclick = () => openMediaViewer(index);
+        imageGrid.appendChild(wrapper);
+      } else {
+        const card = document.createElement('div');
+        card.className = 'media-card';
+        
+        const img = document.createElement('img');
+        img.src = mediaData.sample;
+        img.loading = 'lazy';
+        img.className = 'media-thumbnail';
+        img.onload = () => img.classList.add('loaded');
+        img.onclick = () => openMediaViewer(index);
+        
+        card.appendChild(img);
+        imageGrid.appendChild(card);
+      }
+    }
+
+    function displayError() {
+      statusMessage.innerHTML = 'something went wrong… <span class="retry-link">try again?</span>';
+      statusMessage.style.display = 'block';
+      
+      statusMessage.querySelector('.retry-link').onclick = () => {
+        statusMessage.style.display = 'none';
+        doSearch();
+      };
+    }
+
+    function openMediaViewer(index) {
+      currentIndex = index;
+      viewerContent.innerHTML = '';
+      viewerControls.innerHTML = '';
+      
+      const media = items[index];
+      const isVideo = /\.(webm|mp4)(?:$|\?)/i.test(media.file);
+      
+      if (isVideo) {
+        const video = document.createElement('video');
+        video.controls = true;
+        video.autoplay = true;
+        video.playsInline = true;
+        video.preload = 'auto';
+        video.src = media.file;
+        viewerContent.appendChild(video);
+      } else {
+        const img = document.createElement('img');
+        img.src = media.file;
+        viewerContent.appendChild(img);
+      }
+
+      const downloadLink = document.createElement('a');
+      downloadLink.href = media.file;
+      downloadLink.download = '';
+      downloadLink.target = '_blank';
+      downloadLink.className = 'viewer-control liquid-glass';
+      downloadLink.innerHTML = '<img src="https://www.svgrepo.com/show/510957/download.svg" alt="Download">';
+      viewerControls.appendChild(downloadLink);
+
+      const sourceLink = document.createElement('a');
+      sourceLink.href = media.link;
+      sourceLink.target = '_blank';
+      sourceLink.rel = 'noopener';
+      sourceLink.className = 'viewer-control liquid-glass';
+      sourceLink.innerHTML = '<img src="https://www.svgrepo.com/show/505044/url-checker.svg" alt="Source">';
+      viewerControls.appendChild(sourceLink);
+      
+      mediaViewer.classList.add('active');
+    }
+
+    function closeMediaViewer() {
+      viewerContent.querySelectorAll('video').forEach(video => {
+        video.pause();
+        video.currentTime = 0;
+      });
+      mediaViewer.classList.remove('active');
+    }
+
+    function navigateMedia(direction) {
+      const newIndex = currentIndex + direction;
+      
+      if (direction === -1 && newIndex >= 0) {
+        openMediaViewer(newIndex);
+      } else if (direction === 1 && newIndex < items.length) {
+        openMediaViewer(newIndex);
+      }
+    }
+
+    mediaViewer.onclick = closeMediaViewer;
+    viewerContent.onclick = (e) => e.stopPropagation();
+    viewerControls.addEventListener('click', (e) => e.stopPropagation());
+    closeViewer.onclick = closeMediaViewer;
+    prevNav.onclick = (e) => { e.stopPropagation(); navigateMedia(-1); };
+    nextNav.onclick = (e) => { e.stopPropagation(); navigateMedia(1); };
+
+    document.addEventListener('keydown', (e) => {
+      if (!mediaViewer.classList.contains('active')) return;
+      
+      switch (e.key) {
+        case 'ArrowLeft':
+          navigateMedia(-1);
+          break;
+        case 'ArrowRight':
+          navigateMedia(1);
+          break;
+        case 'Escape':
+          closeMediaViewer();
+          break;
+      }
+    });
+
+    document.addEventListener('dragstart', (e) => {
+      if (['IMG', 'VIDEO'].includes(e.target.tagName)) {
+        e.preventDefault();
+      }
+    });
+
+    function doSearch() {
+      if (searchInput.value.trim()) {
+        addTag(searchInput.value);
+        searchInput.value = '';
+      }
+      
+      page = 0;
+      items = [];
+      imageGrid.innerHTML = '';
+      welcomeState.style.display = 'none';
+      statusMessage.style.display = 'none';
+      searchPerformed = true;
+      
+      const sourceLabels = { rule34: 'r34', e621: 'e621', safebooru: 'safe' };
+      document.title = tags.length
+        ? `grbr.xyz - ${sourceLabels[source]} - ${tags.join(', ')}`
+        : 'grbr.xyz - endless booru viewer';
+      
+      fetchBatch();
+    }
+
+    searchBtn.onclick = doSearch;
+
+    const observer = new IntersectionObserver((entries) => {
+      if (searchPerformed && entries[0].isIntersecting && !isLoading) {
+        fetchBatch();
+      }
+    }, {
+      root: document.querySelector('main'),
+      rootMargin: '300px',
+      threshold: 0
+    });
+
+    observer.observe(loadTrigger);
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadSettings();
+      setupCursorTracking();
+      renderTags();
+    });
+  </script>
